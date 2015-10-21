@@ -21,12 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 from datetime import datetime
 from itertools import chain, combinations
+import logging
 from unicodedata import normalize
 
 from google.appengine.ext import ndb
+from google.appengine.ext.db import BadValueError
 
 from flask import Flask, make_response, redirect, request
 from flask.json import jsonify
@@ -120,6 +121,9 @@ class Patient(ndb.Model):
     name = ndb.StringProperty(indexed=False, required=True)
     code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
     blood_type = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
+    type_ = ndb.StringProperty(indexed=False, required=True,
+        choices=["RN", "G", "O"])
+
     name_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_name(self.name), repeated=True)
     code_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_code(self.code), repeated=True)
 
@@ -136,10 +140,13 @@ class Transfusion(ndb.Model):
     patient = ndb.StructuredProperty(Patient)
     nhh_code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
     date = ndb.DateProperty(indexed=True, required=True)
-    local = ndb.StringProperty(indexed=False, required=True)
+    local = ndb.StringProperty(indexed=False, required=True,
+        choices=["unidade-a", "unidade-b", 'unidade-b4', 'alto-risco',
+                 'uti-neonatal', 'uti-materna', 'sem-registro'])
     bags = ndb.LocalStructuredProperty(BloodBag, repeated=True)
     tags = ndb.StringProperty(repeated=True, indexed=False,
-                              choices=['rt', "ficha_preenchida", "carimbo_plantao", "carimbo_nhh", "anvisa"])
+        choices=['rt', "ficha-preenchida", "carimbo-plantao",
+                 "carimbo-nhh", "anvisa"])
     text = ndb.TextProperty(required=False)
 
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
@@ -190,6 +197,7 @@ def get(tr_key):
         "key": tr.key.urlsafe(),
         "name": tr.patient.name,
         "record": tr.patient.code,
+        "kind": tr.patient.kind,
         "blood_type": tr.patient.blood_type,
         "date": tr.date.strftime("%Y-%m-%d"),
         "local": tr.local,
@@ -242,7 +250,8 @@ def create_or_update():
         return make_response(jsonify(code="NOT FOUND"), 404, {})
 
     patient = request.json.get('name', None)
-    record_code = request.json.get('record', None)
+    record_code = request.json.get('record', '')
+    patient_kind = request.json.get('kind', '')
     blood_type = request.json.get('blood_type', None)
     transfusion_date = request.json.get('date', None)
     transfusion_local = request.json.get('local', None)
@@ -254,15 +263,20 @@ def create_or_update():
 
     nhh_code = request.json.get('nhh_code', None)
 
-    tr.populate(patient=Patient(name=patient,
-                                blood_type=blood_type,
-                                code=record_code),
-                nhh_code=nhh_code,
-                date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
-                local=transfusion_local,
-                bags=bags,
-                tags=tags,
-                text=text)
+    try:
+        tr.populate(patient=Patient(name=patient,
+                                    type_=patient_kind,
+                                    blood_type=blood_type,
+                                    code=record_code),
+                    nhh_code=nhh_code,
+                    date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
+                    local=transfusion_local,
+                    bags=bags,
+                    tags=tags,
+                    text=text)
+    except BadValueError as e:
+        logging.error("Cannot create TR from %r: %r" % (request.json, e))
+        return make_response(jsonify(code="INVALID JSON"), 400, {})
     key = tr.put()
 
     return make_response(jsonify(code="OK", key=key.urlsafe()), 200, {})
