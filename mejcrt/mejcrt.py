@@ -149,6 +149,35 @@ class Transfusion(ndb.Model):
 def hello():
     return make_response("MEJC RT", 200, {})
 
+@app.route("/api/transfusion/search", methods=['GET'])
+def search():
+    if not hasattr(request, 'args'):
+        return make_response(jsonify(code="ERROR"), 500, {})
+    query_any = request.args.get('q')
+    query_nhh = request.args.get('nhh_code')
+
+    query = Transfusion.query()
+
+    if query_any:
+        query_any = iconv(query_any).lower()
+        query = query.filter(ndb.OR(Transfusion.nhh_code == query_any,
+                                    Transfusion.patient.name_tags == query_any,
+                                    Transfusion.patient.code_tags == query_any))
+    elif query_nhh:
+        query = query.filter(Transfusion.nhh_code == query_nhh)
+    else:
+        query = None
+
+    keys = []
+    if query:
+        for i, key in enumerate(query.iter(keys_only=True)):
+            if i == 20:
+                break
+            keys.append(key.urlsafe())
+
+    return make_response(jsonify({'keys':keys}), 200, {})
+
+
 @app.route("/api/transfusion/<tr_key>", methods=["GET"])
 def get(tr_key):
     key = ndb.Key(urlsafe=tr_key)
