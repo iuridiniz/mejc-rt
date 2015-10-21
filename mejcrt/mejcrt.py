@@ -206,8 +206,8 @@ def get(tr_key):
     }
     return make_response(jsonify(ret), 200, {})
 
-@app.route("/api/transfusion/create", methods=['POST'])
-def create():
+@app.route("/api/transfusion", methods=['POST', 'PUT'])
+def create_or_update():
     """"
     example:
     {
@@ -232,6 +232,16 @@ def create():
     if not hasattr(request, 'json'):
         return make_response(jsonify(code="ERROR"), 500, {})
 
+    tr_key = request.json.get('key', None)
+    if tr_key:
+        key = ndb.Key(urlsafe=tr_key)
+        tr = key.get()
+    else:
+        tr = Transfusion()
+
+    if tr is None:
+        return make_response(jsonify(code="NOT FOUND"), 404, {})
+
     patient = request.json.get('name', None)
     record_code = request.json.get('record', None)
     blood_type = request.json.get('blood_type', None)
@@ -244,15 +254,16 @@ def create():
     tags = request.json.get('tags', [])
 
     nhh_code = request.json.get('nhh_code', None)
-    tr = Transfusion(patient=Patient(name=patient,
-                                     blood_type=blood_type,
-                                     code=record_code),
-                     nhh_code=nhh_code,
-                     date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
-                     local=transfusion_local,
-                     bags=bags,
-                     tags=tags,
-                     text=text)
+
+    tr.populate(patient=Patient(name=patient,
+                                blood_type=blood_type,
+                                code=record_code),
+                nhh_code=nhh_code,
+                date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
+                local=transfusion_local,
+                bags=bags,
+                tags=tags,
+                text=text)
     key = tr.put()
 
     return make_response(jsonify(code="OK", key=key.urlsafe()), 200, {})
