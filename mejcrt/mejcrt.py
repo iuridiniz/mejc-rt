@@ -149,7 +149,7 @@ class Transfusion(ndb.Model):
 def hello():
     return make_response("MEJC RT", 200, {})
 
-@app.route("/api/create", methods=['POST'])
+@app.route("/api/transfusion/create", methods=['POST'])
 def create():
     """"
     example:
