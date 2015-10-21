@@ -154,6 +154,9 @@ def get(tr_key):
     key = ndb.Key(urlsafe=tr_key)
 
     tr = key.get()
+    if tr is None:
+        return make_response(jsonify(code="NOT FOUND"), 404, {})
+
     ret = {
         "key": tr.key.urlsafe(),
         "name": tr.patient.name,
