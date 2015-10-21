@@ -149,6 +149,31 @@ class Transfusion(ndb.Model):
 def hello():
     return make_response("MEJC RT", 200, {})
 
+@app.route("/api/transfusion/<tr_key>", methods=["GET"])
+def get(tr_key):
+    key = ndb.Key(urlsafe=tr_key)
+
+    tr = key.get()
+    ret = {
+        "key": tr.key.urlsafe(),
+        "name": tr.patient.name,
+        "record": tr.patient.code,
+        "blood_type": tr.patient.blood_type,
+        "date": tr.date.strftime("%Y-%m-%d"),
+        "local": tr.local,
+        "blood_bags" :
+        [
+            {
+                "type": bag.type_,
+                "content": bag.content
+            } for bag in tr.bags
+        ],
+        "text": tr.text,
+        "tags": tr.tags,
+        "nhh_code": tr.nhh_code
+    }
+    return make_response(jsonify(ret), 200, {})
+
 @app.route("/api/transfusion/create", methods=['POST'])
 def create():
     """"
