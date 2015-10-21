@@ -216,18 +216,17 @@ def create_or_update():
         "blood_type": "O+",
         "date": "2015-05-22",
         "local": "UTINEO",
-        "blood_bags" : 
+        "blood_bags":
         [
             {
-                "type": "O-", 
+                "type": "O-",
                 "content": "CHPLI"
-            } 
+            }
         ],
         "text": "",
         "tags": [],
         "nhh_code": "20900"
     }
-    
     """
     if not hasattr(request, 'json'):
         return make_response(jsonify(code="ERROR"), 500, {})
