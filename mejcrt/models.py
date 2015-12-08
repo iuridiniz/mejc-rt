@@ -34,6 +34,8 @@ class BloodBag(ndb.Model):
     content = ndb.StringProperty()
 
 class Transfusion(ndb.Model):
+    object_version = ndb.IntegerProperty(default=1, required=True)
+
     patient = ndb.StructuredProperty(Patient)
     nhh_code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
     date = ndb.DateProperty(indexed=True, required=True)
@@ -41,6 +43,7 @@ class Transfusion(ndb.Model):
     local = ndb.StringProperty(indexed=False, required=True,
         choices=valid_locals)
     bags = ndb.LocalStructuredProperty(BloodBag, repeated=True)
+
     tags = ndb.StringProperty(repeated=True, indexed=False,
         choices=transfusion_tags)
     text = ndb.TextProperty(required=False)
