@@ -11,6 +11,8 @@ blood_types = ('A+', 'B+', 'AB+', "O+", 'A-', 'B-', 'AB-', "O-")
 patient_types = ("RN", "G", "O")
 valid_locals = ["unidade-a", "unidade-b", 'unidade-b4', 'alto-risco',
         'uti-neonatal', 'uti-materna', 'sem-registro']
+transfusion_tags = ['rt', "ficha-preenchida", "carimbo-plantao",
+        "carimbo-nhh", "anvisa", "visitado"]
 
 class Patient(ndb.Model):
     name = ndb.StringProperty(indexed=False, required=True)
@@ -40,8 +42,7 @@ class Transfusion(ndb.Model):
         choices=valid_locals)
     bags = ndb.LocalStructuredProperty(BloodBag, repeated=True)
     tags = ndb.StringProperty(repeated=True, indexed=False,
-        choices=['rt', "ficha-preenchida", "carimbo-plantao",
-                 "carimbo-nhh", "anvisa"])
+        choices=transfusion_tags)
     text = ndb.TextProperty(required=False)
 
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
