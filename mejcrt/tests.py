@@ -4,6 +4,7 @@ Created on 08/12/2015
 @author: Iuri Diniz <iuridiniz@gmail.com>
 '''
 import unittest
+from urllib import urlencode
 
 from google.appengine.ext import testbed, ndb
 
@@ -59,7 +60,9 @@ class TestTransfusion(TestBase):
 
         self.data = data
 
-    def _fixtureCreate(self, data):
+    def _fixtureCreate(self, data=None):
+        if data is None:
+            data = self.data
         rv = self.client.post("/api/transfusion",
                   data=json.dumps(data),
                   content_type='application/json')
@@ -70,7 +73,7 @@ class TestTransfusion(TestBase):
         self.assert200(rv)
 
     def testGet(self):
-        rv = self._fixtureCreate(self.data)
+        rv = self._fixtureCreate()
         key = rv.json['key']
 
         rv = self.client.get("/api/transfusion/%s" % key)
@@ -80,6 +83,14 @@ class TestTransfusion(TestBase):
         del data['key']
         self.assertEquals(self.data, data)
 
+    def testSearchName(self):
+        key = self._fixtureCreate().json['key']
+
+        q = self.data['name'][0:4]
+        rv = self.client.get('/api/transfusion/search?%s' % urlencode(
+                        dict(q=q)))
+        data = rv.json
+        self.assertEquals(data['keys'], [key])
 
 
 
