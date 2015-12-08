@@ -31,13 +31,19 @@ class TestBase(TestCase):
         # using ndb.get_context().set_cache_policy(False)
         ndb.get_context().clear_cache()
 
+    def login(self, email='user@example.com', id='123', is_admin=False):
+        self.testbed.setup_env(
+            user_email=email,
+            user_id=id,
+            user_is_admin='1' if is_admin else '0',
+            overwrite=True)
+
     def tearDown(self):
         self.testbed.deactivate()
 
     def create_app(self):
         from __init__ import app
         return app
-
 
 class TestRoot(TestBase):
     def testRoot(self):
@@ -60,20 +66,42 @@ class TestTransfusion(TestBase):
 
         self.data = data
 
-    def _fixtureCreate(self, data=None):
+    def _fixtureCreateUpdate(self, data=None, update=False):
         if data is None:
             data = self.data
-        rv = self.client.post("/api/transfusion",
+
+        method = self.client.post
+        if update:
+            method = self.client.put
+        rv = method("/api/transfusion",
                   data=json.dumps(data),
                   content_type='application/json')
         return rv
 
     def testCreate(self):
-        rv = self._fixtureCreate(self.data)
+        self.login()
+        rv = self._fixtureCreateUpdate()
         self.assert200(rv)
 
+    def testCreateEmpty(self):
+        self.login()
+        rv = self.client.post('/api/transfusion')
+        self.assert400(rv)
+
+    def testCreateNotLogged(self):
+        rv = self._fixtureCreateUpdate()
+        self.assert401(rv)
+
+    def testCreateInvalid(self):
+        self.login()
+        data = self.data.copy()
+        data['kind'] = 'invalid'
+        rv = self._fixtureCreateUpdate(data)
+        self.assert400(rv)
+
     def testGet(self):
-        rv = self._fixtureCreate()
+        self.login()
+        rv = self._fixtureCreateUpdate()
         key = rv.json['key']
 
         rv = self.client.get("/api/transfusion/%s" % key)
@@ -83,8 +111,13 @@ class TestTransfusion(TestBase):
         del data['key']
         self.assertEquals(self.data, data)
 
+    def testGetNotLogged(self):
+        rv = self.client.get("/api/transfusion/%s" % 123)
+        self.assert401(rv)
+
     def testSearchAny(self):
-        key = self._fixtureCreate().json['key']
+        self.login()
+        key = self._fixtureCreateUpdate().json['key']
 
         query = dict(q=self.data['name'][0:4])
         rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
@@ -92,22 +125,62 @@ class TestTransfusion(TestBase):
         self.assertEquals(data['keys'], [key])
 
     def testSearchName(self):
+        self.login()
         from utils import iconv
-        key = self._fixtureCreate().json['key']
+        key = self._fixtureCreateUpdate().json['key']
 
         query = dict(name=iconv(self.data['name']))
         rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
         data = rv.json
         self.assertEquals(data['keys'], [key])
 
-
     def testSearchNhhcode(self):
-        key = self._fixtureCreate().json['key']
+        self.login()
+        key = self._fixtureCreateUpdate().json['key']
 
         query = dict(nhh_code=self.data['nhh_code'])
         rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
         data = rv.json
         self.assertEquals(data['keys'], [key])
+
+    def testSearchNotLogged(self):
+        rv = self.client.get("/api/transfusion/search?%s" % 123)
+        self.assert401(rv)
+
+    def testSearchNone(self):
+        self.login()
+        rv = self.client.get("/api/transfusion/search?%s" % 123)
+        self.assert200(rv)
+        data = rv.json
+        self.assertEquals(data['keys'], [])
+
+    def testUpdate(self):
+        self.login()
+        # create one
+        rv = self._fixtureCreateUpdate()
+        key = rv.json['key']
+
+        # alter the same key
+        data = self.data
+        data['key'] = key
+        data['name'] = 'Iuri Gomes Diniz'
+        rv = self._fixtureCreateUpdate(data, update=True)
+        # must be 200 OK
+        rv = self.assert200(rv)
+        # check data
+        rv = self.client.get("/api/transfusion/%s" % key)
+        self.assertEquals(data, rv.json)
+
+    def testUpdateNotFound(self):
+        self.login()
+        # create one
+        rv = self._fixtureCreateUpdate()
+        key = rv.json['key']
+
+        # alter invalid key
+        data = self.data
+        data['key'] = key + "NOTVALID"
+        rv = self._fixtureCreateUpdate(data, update=True)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
