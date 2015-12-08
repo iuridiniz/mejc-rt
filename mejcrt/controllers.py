@@ -6,8 +6,10 @@ Created on 08/12/2015
 @author: Iuri Diniz <iuridiniz@gmail.com>
 '''
 from datetime import datetime
+import functools
 import logging
 
+from google.appengine.api import users
 from google.appengine.ext import ndb
 from google.appengine.ext.db import BadValueError
 
@@ -18,11 +20,24 @@ from models import Transfusion, Patient, BloodBag
 from utils import iconv
 
 
+def require_login(admin=False):
+    def decorate(fn):
+        @functools.wraps(fn)
+        def handler(*args, **kwargs):
+            user = users.get_current_user()
+            if user is None:
+                return make_response(jsonify(code="Unauthorized"), 401, {})
+            if admin and not users.is_current_user_admin():
+                return make_response(jsonify(code="Forbidden"), 403, {})
+            return fn(*args, **kwargs)
+        return handler
+    return decorate
 @app.route("/")
 def hello():
     return make_response("MEJC RT", 200, {})
 
 @app.route("/api/transfusion/search", methods=['GET'])
+@require_login()
 def search():
     if not hasattr(request, 'args'):
         return make_response(jsonify(code="ERROR"), 500, {})
@@ -56,6 +71,7 @@ def search():
 
 
 @app.route("/api/transfusion/<tr_key>", methods=["GET"])
+@require_login()
 def get(tr_key):
     key = ndb.Key(urlsafe=tr_key)
 
@@ -85,6 +101,7 @@ def get(tr_key):
     return make_response(jsonify(ret), 200, {})
 
 @app.route("/api/transfusion", methods=['POST', 'PUT'])
+@require_login()
 def create_or_update():
     """"
     example:
