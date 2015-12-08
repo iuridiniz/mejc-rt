@@ -8,7 +8,7 @@ import unittest
 from google.appengine.ext import testbed, ndb
 
 from flask import json
-from flask.ext.testing import TestCase
+from flask_testing import TestCase
 
 
 class TestBase(TestCase):
