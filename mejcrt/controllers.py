@@ -102,7 +102,7 @@ def create_or_update():
         "nhh_code": "20900"
     }
     """
-    if not hasattr(request, 'json'):
+    if not hasattr(request, 'json') or request.json is None:
         return make_response(jsonify(code="ERROR"), 500, {})
 
     tr_key = request.json.get('key', None)
