@@ -20,7 +20,6 @@ from flask.json import jsonify
 from models import Transfusion, Patient, BloodBag
 from utils import iconv
 
-
 def require_login(admin=False):
     def decorate(fn):
         @functools.wraps(fn)
@@ -33,6 +32,7 @@ def require_login(admin=False):
             return fn(*args, **kwargs)
         return handler
     return decorate
+
 @app.route("/")
 def hello():
     return make_response("MEJC RT", 200, {})
@@ -41,7 +41,7 @@ def hello():
 @require_login()
 def search():
     if not hasattr(request, 'args'):
-        return make_response(jsonify(code="ERROR"), 500, {})
+        return make_response(jsonify(code="Bad Request"), 400, {})
     query_any = request.args.get('q')
     query_nhh = request.args.get('nhh_code')
     query_name = request.args.get('name')
@@ -70,7 +70,6 @@ def search():
 
     return make_response(jsonify({'keys':keys}), 200, {})
 
-
 @app.route("/api/transfusion/<tr_key>", methods=["GET"])
 @require_login()
 def get(tr_key):
@@ -78,7 +77,7 @@ def get(tr_key):
 
     tr = key.get()
     if tr is None:
-        return make_response(jsonify(code="NOT FOUND"), 404, {})
+        return make_response(jsonify(code="Not Found"), 404, {})
 
     ret = {
         "key": tr.key.urlsafe(),
@@ -104,34 +103,12 @@ def get(tr_key):
 @app.route("/api/transfusion", methods=['POST', 'PUT'])
 @require_login()
 def create_or_update():
-    """"
-    example:
-    {
-        "name": "John Heyder Oliveira de Medeiros Galvão",
-        "record": "12345/0",
-        "blood_type": "O+",
-        "date": "2015-05-22",
-        "local": "UTINEO",
-        "blood_bags":
-        [
-            {
-                "type": "O-",
-                "content": "CHPLI"
-            }
-        ],
-        "text": "",
-        "tags": [],
-        "nhh_code": "20900"
-    }
-    """
     if not hasattr(request, 'json') or request.json is None:
-        return make_response(jsonify(code="ERROR"), 500, {})
+        return make_response(jsonify(code="Bad Request"), 400, {})
 
     tr_key = request.json.get('key', None)
     tr = None
     if tr_key:
-        key = ndb.Key(urlsafe=tr_key)
-        tr = key.get()
         try:
             key = ndb.Key(urlsafe=tr_key)
             tr = key.get()
@@ -141,7 +118,7 @@ def create_or_update():
         tr = Transfusion()
 
     if tr is None:
-        return make_response(jsonify(code="NOT FOUND"), 404, {})
+        return make_response(jsonify(code="Not Found"), 404, {})
 
     patient = request.json.get('name', None)
     record_code = request.json.get('record', '')
@@ -170,7 +147,7 @@ def create_or_update():
                     text=text)
     except BadValueError as e:
         logging.error("Cannot create TR from %r: %r" % (request.json, e))
-        return make_response(jsonify(code="INVALID JSON"), 400, {})
+        return make_response(jsonify(code="Bad Request"), 400, {})
     key = tr.put()
 
     return make_response(jsonify(code="OK", key=key.urlsafe()), 200, {})
