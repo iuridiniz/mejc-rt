@@ -11,12 +11,13 @@ from google.appengine.ext import testbed, ndb
 from flask import json
 from flask_testing import TestCase
 
-
 class TestBase(TestCase):
     def setUp(self):
         super(TestCase, self).setUp()
         import controllers
         self.ctrl = controllers
+
+        self.maxDiff = None
 
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
@@ -109,6 +110,7 @@ class TestTransfusion(TestBase):
         self.assertEquals(key, rv.json['key'])
         data = rv.json
         del data['key']
+        del data['logs']
         self.assertEquals(self.data, data)
 
     def testGetNotLogged(self):
@@ -169,6 +171,7 @@ class TestTransfusion(TestBase):
         rv = self.assert200(rv)
         # check data
         rv = self.client.get("/api/transfusion/%s" % key)
+        del rv.json['logs']
         self.assertEquals(data, rv.json)
 
     def testUpdateNotFound(self):

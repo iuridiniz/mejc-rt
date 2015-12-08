@@ -14,6 +14,8 @@ valid_locals = ["unidade-a", "unidade-b", 'unidade-b4', 'alto-risco',
 transfusion_tags = ['rt', "ficha-preenchida", "carimbo-plantao",
         "carimbo-nhh", "anvisa", "visitado"]
 
+valid_actions = ["create", 'update']
+
 class Patient(ndb.Model):
     name = ndb.StringProperty(indexed=False, required=True)
     code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
@@ -33,6 +35,17 @@ class BloodBag(ndb.Model):
     type_ = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
     content = ndb.StringProperty()
 
+class LogEntry(ndb.Model):
+    userid = ndb.StringProperty(required=True, indexed=False)
+    email = ndb.StringProperty(required=True, indexed=False)
+    when = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
+    action = ndb.StringProperty(indexed=False, required=True, choices=valid_actions)
+
+    @classmethod
+    def from_user(cls, user, is_new):
+        return cls(userid=user.user_id(), email=user.email(),
+                   action="create" if is_new else "update")
+
 class Transfusion(ndb.Model):
     object_version = ndb.IntegerProperty(default=1, required=True)
 
@@ -47,6 +60,7 @@ class Transfusion(ndb.Model):
     tags = ndb.StringProperty(repeated=True, indexed=False,
         choices=transfusion_tags)
     text = ndb.TextProperty(required=False)
+    logs = ndb.StructuredProperty(LogEntry, repeated=True)
 
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
     updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)

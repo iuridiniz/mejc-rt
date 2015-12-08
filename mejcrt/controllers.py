@@ -17,8 +17,9 @@ from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 from __init__ import app
 from flask import make_response, request
 from flask.json import jsonify
-from models import Transfusion, Patient, BloodBag
+from models import Transfusion, Patient, BloodBag, LogEntry
 from utils import iconv
+
 
 def require_login(admin=False):
     def decorate(fn):
@@ -96,7 +97,14 @@ def get(tr_key):
         ],
         "text": tr.text,
         "tags": tr.tags,
-        "nhh_code": tr.nhh_code
+        "nhh_code": tr.nhh_code,
+        'logs': [
+             {
+                'email': log.email,
+                'action': log.action,
+                'when': log.when.strftime("%Y-%m-%d %H:%M:%S"),
+              } for log in tr.logs
+         ]
     }
     return make_response(jsonify(ret), 200, {})
 
@@ -108,6 +116,7 @@ def create_or_update():
 
     tr_key = request.json.get('key', None)
     tr = None
+    is_new = False
     if tr_key:
         try:
             key = ndb.Key(urlsafe=tr_key)
@@ -115,6 +124,7 @@ def create_or_update():
         except ProtocolBufferDecodeError:
             pass
     else:
+        is_new = True
         tr = Transfusion()
 
     if tr is None:
@@ -133,7 +143,9 @@ def create_or_update():
     tags = request.json.get('tags', [])
 
     nhh_code = request.json.get('nhh_code', None)
+    logs = tr.logs or []
 
+    logs.append(LogEntry.from_user(users.get_current_user(), is_new))
     try:
         tr.populate(patient=Patient(name=patient,
                                     type_=patient_kind,
@@ -143,6 +155,7 @@ def create_or_update():
                     date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
                     local=transfusion_local,
                     bags=bags,
+                    logs=logs,
                     tags=tags,
                     text=text)
     except BadValueError as e:
