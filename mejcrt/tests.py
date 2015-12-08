@@ -30,6 +30,9 @@ class TestBase(TestCase):
         # using ndb.get_context().set_cache_policy(False)
         ndb.get_context().clear_cache()
 
+    def tearDown(self):
+        self.testbed.deactivate()
+
     def create_app(self):
         from __init__ import app
         return app
@@ -42,7 +45,7 @@ class TestRoot(TestBase):
 
 class TestTransfusion(TestBase):
     def setUp(self):
-        super(TestBase, self).setUp()
+        super(TestTransfusion, self).setUp()
         data = {u'bags': [{u'content': u'CHPLI', u'type': u'O-'}],
                 u'blood_type': u'O+',
                 u'date': u'2015-05-22',
