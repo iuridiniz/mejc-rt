@@ -92,7 +92,13 @@ class TestTransfusion(TestBase):
         data = rv.json
         self.assertEquals(data['keys'], [key])
 
+    def testSearchNhhcode(self):
+        key = self._fixtureCreate().json['key']
 
+        query = dict(nhh_code=self.data['nhh_code'])
+        rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
+        data = rv.json
+        self.assertEquals(data['keys'], [key])
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
