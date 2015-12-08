@@ -43,28 +43,40 @@ class TestRoot(TestBase):
 class TestTransfusion(TestBase):
     def setUp(self):
         super(TestBase, self).setUp()
-        data = {u'blood_bags': [{u'content': u'CHPLI', u'type': u'O-'}],
+        data = {u'bags': [{u'content': u'CHPLI', u'type': u'O-'}],
                 u'blood_type': u'O+',
                 u'date': u'2015-05-22',
                 u'local': u'uti-neonatal',
                 u'name': u'John Heyder Oliveira de Medeiros Galv\xe3o',
                 u'nhh_code': u'20900',
                 u'kind': u'RN',
-                u'record': u'12345/0',
-                u'tags': [],
-                u'text': u''}
+                u'record': u'123450',
+                u'tags': [u'rt'],
+                u'text': u'some test'}
 
         self.data = data
 
-    def _fixtureCreate(self):
+    def _fixtureCreate(self, data):
         rv = self.client.post("/api/transfusion",
-                  data=json.dumps(self.data),
+                  data=json.dumps(data),
                   content_type='application/json')
         return rv
 
     def testCreate(self):
-        rv = self._fixtureCreate()
+        rv = self._fixtureCreate(self.data)
         self.assert200(rv)
+
+    def testGet(self):
+        rv = self._fixtureCreate(self.data)
+        key = rv.json['key']
+
+        rv = self.client.get("/api/transfusion/%s" % key)
+
+        self.assertEquals(key, rv.json['key'])
+        data = rv.json
+        del data['key']
+        self.assertEquals(self.data, data)
+
 
 
 

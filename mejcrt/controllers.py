@@ -63,11 +63,11 @@ def get(tr_key):
         "key": tr.key.urlsafe(),
         "name": tr.patient.name,
         "record": tr.patient.code,
-        "kind": tr.patient.kind,
+        "kind": tr.patient.type_,
         "blood_type": tr.patient.blood_type,
         "date": tr.date.strftime("%Y-%m-%d"),
         "local": tr.local,
-        "blood_bags" :
+        "bags" :
         [
             {
                 "type": bag.type_,
@@ -123,7 +123,7 @@ def create_or_update():
     transfusion_local = request.json.get('local', None)
     bags = []
     for bag in request.json.get('bags', []):
-        bags.put(BloodBag(type_=bag['type'], content=bag['content']))
+        bags.append(BloodBag(type_=bag['type'], content=bag['content']))
     text = request.json.get('text', None) or None
     tags = request.json.get('tags', [])
 
