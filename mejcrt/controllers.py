@@ -12,6 +12,7 @@ import logging
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from google.appengine.ext.db import BadValueError
+from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
 from __init__ import app
 from flask import make_response, request
@@ -127,9 +128,15 @@ def create_or_update():
         return make_response(jsonify(code="ERROR"), 500, {})
 
     tr_key = request.json.get('key', None)
+    tr = None
     if tr_key:
         key = ndb.Key(urlsafe=tr_key)
         tr = key.get()
+        try:
+            key = ndb.Key(urlsafe=tr_key)
+            tr = key.get()
+        except ProtocolBufferDecodeError:
+            pass
     else:
         tr = Transfusion()
 
