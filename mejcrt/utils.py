@@ -40,17 +40,18 @@ def tokenize(phrase, minimum=None, maximum=None, onlystart=True, combine=True):
         maximum = 1
 
     tokens = set()
-    words = filter(lambda x: len(x) >= minimum, str(phrase).split())
+    words = str(phrase).split()
     # add each word and word combination
     if not combine:
         for word in words:
-            tokens.add(word)
+            if word >= minimum:
+                tokens.add(word)
     else:
         for combination in [" ".join(s) for s in  powerset(words)]:
-            if len(combination):
+            if len(combination) > minimum:
                 tokens.add(combination)
 
-    for word in words:
+    for word in filter(lambda x: len(x) >= minimum, words):
         # add partial words
         length = len(word)
 

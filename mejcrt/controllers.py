@@ -28,6 +28,7 @@ def search():
         return make_response(jsonify(code="ERROR"), 500, {})
     query_any = request.args.get('q')
     query_nhh = request.args.get('nhh_code')
+    query_name = request.args.get('name')
 
     query = Transfusion.query()
 
@@ -38,6 +39,9 @@ def search():
                                     Transfusion.patient.code_tags == query_any))
     elif query_nhh:
         query = query.filter(Transfusion.nhh_code == query_nhh)
+    elif query_name:
+        query_name = iconv(query_name).lower()
+        query = query.filter(Transfusion.patient.name_tags == query_name)
     else:
         query = None
 

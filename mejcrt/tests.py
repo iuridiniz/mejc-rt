@@ -83,14 +83,23 @@ class TestTransfusion(TestBase):
         del data['key']
         self.assertEquals(self.data, data)
 
-    def testSearchName(self):
+    def testSearchAny(self):
         key = self._fixtureCreate().json['key']
 
-        q = self.data['name'][0:4]
-        rv = self.client.get('/api/transfusion/search?%s' % urlencode(
-                        dict(q=q)))
+        query = dict(q=self.data['name'][0:4])
+        rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
         data = rv.json
         self.assertEquals(data['keys'], [key])
+
+    def testSearchName(self):
+        from utils import iconv
+        key = self._fixtureCreate().json['key']
+
+        query = dict(name=iconv(self.data['name']))
+        rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
+        data = rv.json
+        self.assertEquals(data['keys'], [key])
+
 
     def testSearchNhhcode(self):
         key = self._fixtureCreate().json['key']
