@@ -74,7 +74,7 @@ class TestTransfusion(TestBase):
         method = self.client.post
         if update:
             method = self.client.put
-        rv = method("/api/transfusion",
+        rv = method("/api/v1/transfusion",
                   data=json.dumps(data),
                   content_type='application/json')
         return rv
@@ -86,7 +86,7 @@ class TestTransfusion(TestBase):
 
     def testCreateEmpty(self):
         self.login()
-        rv = self.client.post('/api/transfusion')
+        rv = self.client.post('/api/v1/transfusion')
         self.assert400(rv)
 
     def testCreateNotLogged(self):
@@ -103,9 +103,12 @@ class TestTransfusion(TestBase):
     def testGet(self):
         self.login()
         rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+
         key = rv.json['key']
 
-        rv = self.client.get("/api/transfusion/%s" % key)
+        rv = self.client.get("/api/v1/transfusion/%s" % key)
 
         self.assertEquals(key, rv.json['key'])
         data = rv.json
@@ -114,7 +117,7 @@ class TestTransfusion(TestBase):
         self.assertEquals(self.data, data)
 
     def testGetNotLogged(self):
-        rv = self.client.get("/api/transfusion/%s" % 123)
+        rv = self.client.get("/api/v1/transfusion/%s" % 123)
         self.assert401(rv)
 
     def testSearchAny(self):
@@ -122,7 +125,9 @@ class TestTransfusion(TestBase):
         key = self._fixtureCreateUpdate().json['key']
 
         query = dict(q=self.data['name'][0:4])
-        rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
+        rv = self.client.get('/api/v1/transfusion/search?%s' % urlencode(query))
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
         data = rv.json
         self.assertEquals(data['keys'], [key])
 
@@ -132,7 +137,8 @@ class TestTransfusion(TestBase):
         key = self._fixtureCreateUpdate().json['key']
 
         query = dict(name=iconv(self.data['name']))
-        rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
+        rv = self.client.get('/api/v1/transfusion/search?%s' % urlencode(query))
+        self.assert200(rv)
         data = rv.json
         self.assertEquals(data['keys'], [key])
 
@@ -141,17 +147,18 @@ class TestTransfusion(TestBase):
         key = self._fixtureCreateUpdate().json['key']
 
         query = dict(nhh_code=self.data['nhh_code'])
-        rv = self.client.get('/api/transfusion/search?%s' % urlencode(query))
+        rv = self.client.get('/api/v1/transfusion/search?%s' % urlencode(query))
+        self.assert200(rv)
         data = rv.json
         self.assertEquals(data['keys'], [key])
 
     def testSearchNotLogged(self):
-        rv = self.client.get("/api/transfusion/search?%s" % 123)
+        rv = self.client.get("/api/v1/transfusion/search?%s" % 123)
         self.assert401(rv)
 
     def testSearchNone(self):
         self.login()
-        rv = self.client.get("/api/transfusion/search?%s" % 123)
+        rv = self.client.get("/api/v1/transfusion/search?%s" % 123)
         self.assert200(rv)
         data = rv.json
         self.assertEquals(data['keys'], [])
@@ -170,7 +177,8 @@ class TestTransfusion(TestBase):
         # must be 200 OK
         rv = self.assert200(rv)
         # check data
-        rv = self.client.get("/api/transfusion/%s" % key)
+        rv = self.client.get("/api/v1/transfusion/%s" % key)
+        self.assert200(rv)
         del rv.json['logs']
         self.assertEquals(data, rv.json)
 

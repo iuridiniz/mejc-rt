@@ -20,7 +20,6 @@ from flask.json import jsonify
 from models import Transfusion, Patient, BloodBag, LogEntry
 from utils import iconv
 
-
 def require_login(admin=False):
     def decorate(fn):
         @functools.wraps(fn)
@@ -38,7 +37,7 @@ def require_login(admin=False):
 def hello():
     return make_response("MEJC RT", 200, {})
 
-@app.route("/api/transfusion/search", methods=['GET'])
+@app.route("/api/v1/transfusion/search", methods=['GET'])
 @require_login()
 def search():
     if not hasattr(request, 'args'):
@@ -71,7 +70,7 @@ def search():
 
     return make_response(jsonify({'keys':keys}), 200, {})
 
-@app.route("/api/transfusion/<tr_key>", methods=["GET"])
+@app.route("/api/v1/transfusion/<tr_key>", methods=["GET"])
 @require_login()
 def get(tr_key):
     key = ndb.Key(urlsafe=tr_key)
@@ -108,7 +107,7 @@ def get(tr_key):
     }
     return make_response(jsonify(ret), 200, {})
 
-@app.route("/api/transfusion", methods=['POST', 'PUT'])
+@app.route("/api/v1/transfusion", methods=['POST', 'PUT'])
 @require_login()
 def create_or_update():
     if not hasattr(request, 'json') or request.json is None:
