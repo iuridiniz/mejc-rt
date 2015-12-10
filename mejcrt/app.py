@@ -21,4 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .app import app
+'''
+Created on 10/12/2015
+
+@author: Iuri Diniz <iuridiniz@gmail.com>
+'''
+
+from flask import Flask
+
+app = Flask(__name__)
+app.debug = True
+
+__all__ = ['app']
+
+if True:
+    # setup routes
+    from .controllers import *
+
+@app.route("/")
+def hello():
+    return make_response("MEJC RT", 200, {})
