@@ -3,7 +3,9 @@ Created on 08/12/2015
 
 @author: Iuri Diniz <iuridiniz@gmail.com>
 '''
+from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
+
 from utils import onlynumbers, iconv, tokenize
 
 # Models
@@ -16,25 +18,6 @@ transfusion_tags = ['rt', "ficha-preenchida", "carimbo-plantao",
 
 valid_actions = ["create", 'update']
 
-class Patient(ndb.Model):
-    name = ndb.StringProperty(indexed=False, required=True)
-    code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
-    blood_type = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
-    type_ = ndb.StringProperty(indexed=False, required=True,
-        choices=patient_types)
-
-    name_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_name(self.name), repeated=True)
-    code_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_code(self.code), repeated=True)
-
-    def _gen_tokens_for_name(self, name):
-        return list(tokenize(iconv(name.lower()), minimum=4, maximum=4))
-    def _gen_tokens_for_code(self, code):
-        return list(tokenize(iconv(code.lower())))
-
-class BloodBag(ndb.Model):
-    type_ = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
-    content = ndb.StringProperty()
-
 class LogEntry(ndb.Model):
     userid = ndb.StringProperty(required=True, indexed=False)
     email = ndb.StringProperty(required=True, indexed=False)
@@ -46,10 +29,50 @@ class LogEntry(ndb.Model):
         return cls(userid=user.user_id(), email=user.email(),
                    action="create" if is_new else "update")
 
+class PatientRecord(ndb.Model):
+    pass
+
+class Patient(ndb.Model):
+    object_version = ndb.IntegerProperty(default=1, required=True)
+
+    name = ndb.StringProperty(indexed=False, required=True)
+    code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
+    blood_type = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
+    type_ = ndb.StringProperty(indexed=False, required=True,
+        choices=patient_types)
+    logs = ndb.StructuredProperty(LogEntry, repeated=True)
+
+    name_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_name(self.name), repeated=True)
+    code_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_code(self.code), repeated=True)
+
+    def _gen_tokens_for_name(self, name):
+        return list(tokenize(iconv(name.lower()), minimum=4, maximum=4))
+    def _gen_tokens_for_code(self, code):
+        return list(tokenize(iconv(code.lower())))
+
+    @ndb.transactional
+    def put(self, **ctx_options):
+        key = Patient.get_by_code(self.code, onlykey=True)
+        if not key:
+            # pr = PatientRecord(id=self.code)
+            self.key = ndb.Key(PatientRecord, self.code, Patient, None)
+            return super(Patient, self).put(**ctx_options)
+
+        raise BadValueError("Patient.code %r is duplicated" % self.code)
+
+    @classmethod
+    def get_by_code(cls, code, onlykey=False):
+        result = Patient.query(ancestor=ndb.Key(PatientRecord, code)).get(keys_only=onlykey)
+        return result
+
+class BloodBag(ndb.Model):
+    type_ = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
+    content = ndb.StringProperty()
+
 class Transfusion(ndb.Model):
     object_version = ndb.IntegerProperty(default=1, required=True)
 
-    patient = ndb.StructuredProperty(Patient)
+    patient_key = ndb.KeyProperty(Patient, required=True, indexed=True)
     nhh_code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
     date = ndb.DateProperty(indexed=True, required=True)
 
@@ -64,3 +87,8 @@ class Transfusion(ndb.Model):
 
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
     updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
+
+    @property
+    def patient(self):
+        return Patient.get_by_id(self.patient_key)
+

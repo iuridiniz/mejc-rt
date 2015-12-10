@@ -51,25 +51,88 @@ class TestRoot(TestBase):
         rv = self.client.get("/")
         assert "MEJC RT" in rv.data
 
-class TestTransfusion(TestBase):
-    def setUp(self):
-        super(TestTransfusion, self).setUp()
-        data = {u'bags': [{u'content': u'CHPLI', u'type': u'O-'}],
-                u'blood_type': u'O+',
-                u'date': u'2015-05-22',
-                u'local': u'uti-neonatal',
-                u'name': u'John Heyder Oliveira de Medeiros Galv\xe3o',
-                u'nhh_code': u'20900',
-                u'kind': u'RN',
-                u'record': u'123450',
-                u'tags': [u'rt'],
-                u'text': u'some test'}
+class TestPatient(TestBase):
+    patient_data = {u'blood_type': u'O+',
+                     u'name': u'John Heyder Oliveira de Medeiros Galv\xe3o',
+                     u'kind': u'RN',
+                     u'record': u'123450', }
 
-        self.data = data
+    def setUp(self):
+        super(TestPatient, self).setUp()
 
     def _fixtureCreateUpdate(self, data=None, update=False):
         if data is None:
-            data = self.data
+            data = self.patient_data
+
+        method = self.client.post
+        if update:
+            method = self.client.put
+        rv = method("/api/v1/patient",
+                  data=json.dumps(data),
+                  content_type='application/json')
+        return rv
+
+    def testCreate(self):
+        self.login()
+        rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+
+        from models import Patient
+        p = Patient.get_by_code(self.patient_data['record'], False)
+        self.assertIsInstance(p, Patient)
+
+    def testDuplicated(self):
+        self.login()
+        rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+
+        rv = self._fixtureCreateUpdate()
+        self.assert400(rv)
+
+    def testGet(self):
+        self.login()
+        rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+        key = rv.json['key']
+
+        rv = self.client.get("/api/v1/patient/%s" % key)
+        self.assert200(rv)
+        data = rv.json
+        self.assertEquals(key, data['key'])
+
+        del data['key']
+        del data['logs']
+
+        self.assertEquals(self.patient_data, data)
+
+class TestTransfusion(TestBase):
+    tr_data = {u'bags': [{u'content': u'CHPLI', u'type': u'O-'}],
+                u'date': u'2015-05-22',
+                u'local': u'uti-neonatal',
+                u'patient_key': None,
+                u'nhh_code': u'20900',
+                u'tags': [u'rt'],
+                u'text': u'some test'}
+
+    def setUp(self):
+        super(TestTransfusion, self).setUp()
+
+        self.data = self.tr_data.copy()
+
+
+    def _fixtureCreatePatient(self, data=None):
+        if data is None:
+            data = TestPatient.patient_data.copy()
+
+        rv = self.client.post("/api/v1/patient", data=json.dumps(data),
+                         content_type='application/json')
+
+        return rv.json['key']
+
+    def _fixtureCreateUpdate(self, data=None, update=False):
+        if data is None:
+            data = self.data.copy()
+            data['patient_key'] = self._fixtureCreatePatient()
 
         method = self.client.post
         if update:
@@ -90,7 +153,7 @@ class TestTransfusion(TestBase):
         self.assert400(rv)
 
     def testCreateNotLogged(self):
-        rv = self._fixtureCreateUpdate()
+        rv = self._fixtureCreateUpdate(self.data)
         self.assert401(rv)
 
     def testCreateInvalid(self):
@@ -102,7 +165,11 @@ class TestTransfusion(TestBase):
 
     def testGet(self):
         self.login()
-        rv = self._fixtureCreateUpdate()
+
+        expected_data = self.data.copy()
+        expected_data['patient_key'] = self._fixtureCreatePatient()
+        rv = self._fixtureCreateUpdate(expected_data)
+
         self.assert200(rv)
         self.assertIsNotNone(rv.json)
 
@@ -114,17 +181,20 @@ class TestTransfusion(TestBase):
         data = rv.json
         del data['key']
         del data['logs']
-        self.assertEquals(self.data, data)
+        self.assertEquals(expected_data, data)
 
     def testGetNotLogged(self):
         rv = self.client.get("/api/v1/transfusion/%s" % 123)
         self.assert401(rv)
 
-    def testSearchAny(self):
+    def testSearchRecord(self):
         self.login()
-        key = self._fixtureCreateUpdate().json['key']
+        rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        key = rv.json['key']
 
-        query = dict(q=self.data['name'][0:4])
+        query = dict(record=TestPatient.patient_data['record'][0:4])
         rv = self.client.get('/api/v1/transfusion/search?%s' % urlencode(query))
         self.assert200(rv)
         self.assertIsNotNone(rv.json)
@@ -134,9 +204,12 @@ class TestTransfusion(TestBase):
     def testSearchName(self):
         self.login()
         from utils import iconv
-        key = self._fixtureCreateUpdate().json['key']
+        rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        key = rv.json['key']
 
-        query = dict(name=iconv(self.data['name']))
+        query = dict(name=iconv(TestPatient.patient_data['name']))
         rv = self.client.get('/api/v1/transfusion/search?%s' % urlencode(query))
         self.assert200(rv)
         data = rv.json
@@ -144,7 +217,10 @@ class TestTransfusion(TestBase):
 
     def testSearchNhhcode(self):
         self.login()
-        key = self._fixtureCreateUpdate().json['key']
+        rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        key = rv.json['key']
 
         query = dict(nhh_code=self.data['nhh_code'])
         rv = self.client.get('/api/v1/transfusion/search?%s' % urlencode(query))
@@ -165,27 +241,33 @@ class TestTransfusion(TestBase):
 
     def testUpdate(self):
         self.login()
-        # create one
-        rv = self._fixtureCreateUpdate()
-        key = rv.json['key']
+
+        expected_data = self.data.copy()
+        expected_data['patient_key'] = self._fixtureCreatePatient()
+        rv = self._fixtureCreateUpdate(expected_data)
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
 
         # alter the same key
-        data = self.data
-        data['key'] = key
-        data['name'] = 'Iuri Gomes Diniz'
-        rv = self._fixtureCreateUpdate(data, update=True)
+        key = rv.json['key']
+        expected_data['key'] = key
+        expected_data['tags'] = ['rt', 'anvisa']
+        rv = self._fixtureCreateUpdate(expected_data, update=True)
         # must be 200 OK
         rv = self.assert200(rv)
         # check data
         rv = self.client.get("/api/v1/transfusion/%s" % key)
         self.assert200(rv)
         del rv.json['logs']
-        self.assertEquals(data, rv.json)
+        self.assertEquals(expected_data, rv.json)
 
     def testUpdateNotFound(self):
         self.login()
         # create one
         rv = self._fixtureCreateUpdate()
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
         key = rv.json['key']
 
         # alter invalid key
