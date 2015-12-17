@@ -75,18 +75,25 @@ class Model(ndb.Model):
 
     @classmethod
     def _parse_data(cls, d):
-        # remove _ at 'end'
-        # FIXME: circular objects (make a set of ids)
+        # FIXME: does not check if there's circular objects (make a set of ids?)
         ret = d
-        if isinstance(d, dict):
+        if isinstance(d, ndb.Key):
+            ret = cls._parse_data(d.get())
+        elif isinstance(d, ndb.Model):
+            ret = cls._parse_data(d.to_dict())
+        elif isinstance(d, (datetime.datetime, datetime.date, datetime.time)):
+            ret = cls._parse_data(str(d))
+        elif isinstance(d, dict):
             ret = {}
             for k, v in d.iteritems():
                 v = cls._parse_data(v)
 
+                # remove _ at end
                 new_key = k
                 while len(new_key) and new_key[-1] == '_':
                     new_key = new_key[:-1]
                 ret[new_key] = v
+
         elif isinstance(d, (list, tuple)):
             ret = []
             for v in iter(d):
@@ -102,17 +109,6 @@ class Model(ndb.Model):
             exclude = self.__dict_exclude__
 
         ret = super(Model, self).to_dict(include=include, exclude=exclude)
-        for k, v in ret.iteritems():
-            # json friendly
-            if isinstance(v, ndb.Key):
-                v = v.get()
-
-            if isinstance(v, ndb.Model):
-                v = v.to_dict()
-                ret[k] = v
-            elif isinstance(v, (datetime.datetime, datetime.date, datetime.time)):
-                ret[k] = str(v)
-
         # insert key as urlsafe
         if (include and 'key' in include) or (exclude and 'key' not in exclude):
             ret['key'] = self.key.urlsafe()
@@ -161,15 +157,13 @@ class LogEntry(Model):
     __dict_exclude__ = ['object_version']
 
     object_version = ndb.IntegerProperty(default=1, required=True)
-
-    userid = ndb.StringProperty(required=True, indexed=False)
-    email = ndb.StringProperty(required=True, indexed=False)
+    user = ndb.KeyProperty(UserPrefs, required=True, indexed=True)
     when = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
     action = ndb.StringProperty(indexed=False, required=True, choices=valid_actions)
 
     @classmethod
     def from_user(cls, user, is_new):
-        return cls(userid=user.user_id(), email=user.email(),
+        return cls(user=user.key,
                    action="create" if is_new else "update")
 
 class PatientCode(Model):

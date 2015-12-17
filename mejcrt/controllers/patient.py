@@ -31,14 +31,16 @@ import logging
 from flask import request
 from flask.helpers import make_response
 from flask.json import jsonify
-from google.appengine.api import users
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
+from mejcrt.models import UserPrefs
+
 from ..app import app
 from ..models import Patient, LogEntry
 from .decorators import require_login
+
 
 @app.route("/api/v1/patient", methods=['POST', 'PUT'], endpoint="patient.upinsert")
 @require_login()
@@ -62,7 +64,7 @@ def create_or_update():
         patient = Patient()
 
     logs = patient.logs or []
-    logs.append(LogEntry.from_user(users.get_current_user(), is_new))
+    logs.append(LogEntry.from_user(UserPrefs.get_current(), is_new))
 
     name = request.json.get('name', None)
 

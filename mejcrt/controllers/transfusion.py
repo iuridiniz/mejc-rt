@@ -38,13 +38,12 @@ from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
-from mejcrt.models import valid_locals, blood_types, blood_contents
+from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs
 
 from ..app import app
 from ..models import Transfusion, Patient, BloodBag, LogEntry
 from ..util import iconv
 from .decorators import require_login
-
 
 @app.route("/api/v1/transfusion/search", methods=['GET'], endpoint="transfusion.search")
 @require_login()
@@ -152,7 +151,7 @@ def create_or_update():
 
     logs = tr.logs or []
 
-    logs.append(LogEntry.from_user(users.get_current_user(), is_new))
+    logs.append(LogEntry.from_user(UserPrefs.get_current(), is_new))
     try:
 
         tr.populate(patient=patient_key,
