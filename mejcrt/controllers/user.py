@@ -86,4 +86,4 @@ def update():
         logging.error("Cannot update user from %r: %r" % (request.json, e))
         return make_response(jsonify(code="Bad Request"), 400, {})
 
-    return make_response(jsonify(code="OK", key=key.urlsafe()), 200, {})
+    return make_response(jsonify(code="OK", data=dict(key=key.urlsafe())), 200, {})

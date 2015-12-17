@@ -74,7 +74,7 @@ def search():
                 break
             keys.append(key.urlsafe())
 
-    return make_response(jsonify({'keys':keys}), 200, {})
+    return make_response(jsonify(data=dict(keys=keys), code='OK'), 200, {})
 
 @app.route("/api/v1/transfusion/<key>", methods=["GET"], endpoint="transfusion.get")
 @require_login()
@@ -108,7 +108,7 @@ def get(key):
               } for log in tr.logs
          ]
     }
-    return make_response(jsonify(ret), 200, {})
+    return make_response(jsonify(data=ret, code='OK'), 200, {})
 
 @app.route("/api/v1/transfusion", methods=['POST', 'PUT'],
            endpoint="transfusion.upinsert")
@@ -184,9 +184,9 @@ def create_or_update():
         logging.error("Cannot create TR from %r: %r" % (request.json, e))
         return make_response(jsonify(code="Bad Request"), 400, {})
 
-    return make_response(jsonify(code="OK", key=key.urlsafe()), 200, {})
+    return make_response(jsonify(code="OK", data=dict(key=key.urlsafe())), 200, {})
 
 @app.route("/api/v1/transfusion/locals", methods=["GET"], endpoint="transfusion.locals")
 @require_login()
 def get_locals():
-    return make_response(jsonify(locals=valid_locals), 200, {})
+    return make_response(jsonify(data=dict(locals=valid_locals), code="OK"), 200, {})

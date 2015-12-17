@@ -75,7 +75,7 @@ def create_or_update():
         logging.error("Cannot create Patient from %r: %r" % (request.json, e))
         return make_response(jsonify(code="Bad Request"), 400, {})
 
-    return make_response(jsonify(code="OK", key=key.urlsafe()), 200, {})
+    return make_response(jsonify(code="OK", data=dict(key=key.urlsafe())), 200, {})
 
 @app.route("/api/v1/patient/<key>", methods=["GET"], endpoint="patient.get")
 @require_login()
@@ -100,4 +100,4 @@ def get(key):
               } for log in p.logs
          ]
     }
-    return make_response(jsonify(ret), 200, {})
+    return make_response(jsonify(data=ret, code='OK'), 200, {})
