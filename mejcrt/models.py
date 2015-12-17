@@ -40,13 +40,14 @@ blood_types = ('O-',
                'B+',
                'AB-',
                'AB+')
-blood_contents = ('CHPL',
+blood_contents = ('CH',
+                  'CHPL',
                   'CHPLI',
                   'CHD',
                   'CHI',
                   'PF',
                   'CP',
-                  'CRIO'
+                  'CRIO',
                   'ST')
 
 patient_types = (u'Rec\xe9m-nascido',
@@ -60,8 +61,13 @@ valid_locals = ("Unidade A (Anexo)",
                 'UTI Neonatal',
                 'UTI Materna',
                 'Sem registro')
-transfusion_tags = ('semrt', 'rt', "ficha-preenchida", "carimbo-plantao",
-        "carimbo-nhh", "anvisa", "visitado")
+transfusion_tags = ('semrt',
+                    'rt',
+                    "ficha-preenchida",
+                    "carimbo-plantao",
+                    "carimbo-nhh",
+                    "anvisa",
+                    "visitado")
 
 valid_actions = ["create", 'update']
 
