@@ -21,21 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-'''
-Created on 10/12/2015
-
-@author: Iuri Diniz <iuridiniz@gmail.com>
-'''
-
-from flask import Flask
-
-app = Flask(__name__)
-app.debug = True
-
-__all__ = ['app']
-
-if True:
-    # setup routes
-    from .controllers import *
+from . import patient
+from . import root
+from . import transfusion
 
 

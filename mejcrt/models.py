@@ -31,10 +31,11 @@ from google.appengine.ext import ndb
 from .util import onlynumbers, iconv, tokenize
 # Models
 blood_types = ('A+', 'B+', 'AB+', "O+", 'A-', 'B-', 'AB-', "O-")
+blood_contents = ('CHPL', 'CP', 'PF', 'CHPLI')
 patient_types = ("RN", "G", "O")
 valid_locals = ["unidade-a", "unidade-b", 'unidade-b4', 'alto-risco',
         'uti-neonatal', 'uti-materna', 'sem-registro']
-transfusion_tags = ['rt', "ficha-preenchida", "carimbo-plantao",
+transfusion_tags = ['semrt', 'rt', "ficha-preenchida", "carimbo-plantao",
         "carimbo-nhh", "anvisa", "visitado"]
 
 valid_actions = ["create", 'update']
@@ -50,7 +51,7 @@ class LogEntry(ndb.Model):
         return cls(userid=user.user_id(), email=user.email(),
                    action="create" if is_new else "update")
 
-class PatientRecord(ndb.Model):
+class PatientCode(ndb.Model):
     pass
 
 class Patient(ndb.Model):
@@ -74,27 +75,29 @@ class Patient(ndb.Model):
     @ndb.transactional
     def put(self, **ctx_options):
         key = Patient.get_by_code(self.code, onlykey=True)
-        if not key:
-            # pr = PatientRecord(id=self.code)
-            self.key = ndb.Key(PatientRecord, self.code, Patient, None)
-            return super(Patient, self).put(**ctx_options)
-
-        raise BadValueError("Patient.code %r is duplicated" % self.code)
+        if key and key != self.key:
+            raise BadValueError("Patient.code %r is duplicated" % self.code)
+        if self.key is None:
+            self.key = ndb.Key(PatientCode, self.code, self.__class__, None)
+        return super(Patient, self).put(**ctx_options)
 
     @classmethod
     def get_by_code(cls, code, onlykey=False):
-        result = Patient.query(ancestor=ndb.Key(PatientRecord, code)).get(keys_only=onlykey)
+        result = Patient.query(ancestor=ndb.Key(PatientCode, code)).get(keys_only=onlykey)
         return result
 
 class BloodBag(ndb.Model):
     type_ = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
     content = ndb.StringProperty()
 
+class TransfusionCode(ndb.Model):
+    pass
+
 class Transfusion(ndb.Model):
     object_version = ndb.IntegerProperty(default=1, required=True)
 
     patient_key = ndb.KeyProperty(Patient, required=True, indexed=True)
-    nhh_code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
+    code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
     date = ndb.DateProperty(indexed=True, required=True)
 
     local = ndb.StringProperty(indexed=False, required=True,
@@ -111,5 +114,24 @@ class Transfusion(ndb.Model):
 
     @property
     def patient(self):
-        return Patient.get_by_id(self.patient_key)
+        return self.patient_key.get()
+
+    @ndb.transactional
+    def put(self, **ctx_options):
+        key = self.get_by_code(self.code, onlykey=True)
+        if key and key != self.key:
+            raise BadValueError("Transfusion.code %r is duplicated" % self.code)
+
+        # inject key
+        if self.key is None:
+#             key_flat = ndb.Key(TransfusionCode, self.code, self.__class__, None).flat()
+#             key_flat = self.patient_key.flat() + key_flat
+#             self.key = ndb.Key(*key_flat)
+            self.key = ndb.Key(TransfusionCode, self.code, self.__class__, None)
+        return ndb.Model.put(self, **ctx_options)
+
+    @classmethod
+    def get_by_code(cls, code, onlykey=False):
+        result = Transfusion.query(ancestor=ndb.Key(TransfusionCode, code)).get(keys_only=onlykey)
+        return result
 

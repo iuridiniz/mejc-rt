@@ -27,15 +27,23 @@ Created on 10/12/2015
 @author: Iuri Diniz <iuridiniz@gmail.com>
 '''
 
-from flask import Flask
 
-app = Flask(__name__)
-app.debug = True
+import functools
 
-__all__ = ['app']
+from google.appengine.api import users
 
-if True:
-    # setup routes
-    from .controllers import *
+from flask.helpers import make_response
+from flask.json import jsonify
 
-
+def require_login(admin=False):
+    def decorate(fn):
+        @functools.wraps(fn)
+        def handler(*args, **kwargs):
+            user = users.get_current_user()
+            if user is None:
+                return make_response(jsonify(code="Unauthorized"), 401, {})
+            if admin and not users.is_current_user_admin():
+                return make_response(jsonify(code="Forbidden"), 403, {})
+            return fn(*args, **kwargs)
+        return handler
+    return decorate
