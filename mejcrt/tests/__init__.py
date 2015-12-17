@@ -21,11 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 from copy import deepcopy
-'''
-Created on 08/12/2015
-
-@author: Iuri Diniz <iuridiniz@gmail.com>
-'''
 
 import datetime
 from itertools import count
