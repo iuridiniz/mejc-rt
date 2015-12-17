@@ -38,6 +38,8 @@ from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
+from mejcrt.models import valid_locals
+
 from ..app import app
 from ..models import Transfusion, Patient, BloodBag, LogEntry
 from ..util import iconv
@@ -183,3 +185,8 @@ def create_or_update():
         return make_response(jsonify(code="Bad Request"), 400, {})
 
     return make_response(jsonify(code="OK", key=key.urlsafe()), 200, {})
+
+@app.route("/api/v1/transfusion/locals", methods=["GET"], endpoint="transfusion.locals")
+@require_login()
+def get_locals():
+    return make_response(jsonify(locals=valid_locals), 200, {})

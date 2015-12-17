@@ -388,6 +388,13 @@ class TestTransfusion(TestBase):
                           content_type='application/json')
         self.assert404(rv)
 
+    def testGetLocals(self):
+        self.login()
+        rv = self.client.get(url_for('transfusion.locals'))
+        self.assert200(rv)
+
+        from .. import models
+        self.assertListEqual(rv.json['locals'], models.valid_locals)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
