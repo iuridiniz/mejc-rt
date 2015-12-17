@@ -20,30 +20,40 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 '''
 Created on 10/12/2015
 
 @author: Iuri Diniz <iuridiniz@gmail.com>
 '''
 
-
 import functools
-
-from google.appengine.api import users
 
 from flask.helpers import make_response
 from flask.json import jsonify
 
-def require_login(admin=False):
+from mejcrt.models import UserPrefs
+
+
+def require_admin():
+    return _require_login(require_admin=True)
+
+def require_login():
+    return _require_login(require_admin=False)
+
+def _require_login(require_admin=False):
     def decorate(fn):
         @functools.wraps(fn)
         def handler(*args, **kwargs):
-            user = users.get_current_user()
+            user = UserPrefs.get_current()
             if user is None:
                 return make_response(jsonify(code="Unauthorized"), 401, {})
-            if admin and not users.is_current_user_admin():
+
+            if user.authorized is False:
                 return make_response(jsonify(code="Forbidden"), 403, {})
+
+            if require_admin and not user.admin:
+                return make_response(jsonify(code="Forbidden"), 403, {})
+
             return fn(*args, **kwargs)
         return handler
     return decorate

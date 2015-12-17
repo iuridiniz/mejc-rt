@@ -41,7 +41,6 @@ from flask_testing.utils import TestCase
 from google.appengine.ext import testbed, ndb
 import names
 
-
 def random_date(start=None, end=None):
     """Get a random date between two dates"""
     def date_to_timestamp(d) :
@@ -59,6 +58,9 @@ def random_date(start=None, end=None):
     return datetime.date.fromtimestamp(ptime)
 
 class TestBase(TestCase):
+    ORDINARY_USERID = "42"
+    ADMIN_USERID = "666"
+
     def setUp(self):
         super(TestCase, self).setUp()
         from .. import controllers
@@ -78,7 +80,6 @@ class TestBase(TestCase):
         # Alternatively, you could disable caching by
         # using ndb.get_context().set_cache_policy(False)
         ndb.get_context().clear_cache()
-
 
     @classmethod
     def fixtureCreateSomeData(cls):
@@ -105,6 +106,7 @@ class TestBase(TestCase):
             p.type_ = random.choice(models.patient_types)
             p.put()
 
+        # transfusions
         for _ in range(10):
             tr = models.Transfusion()
             tr.patient_key = p.key
@@ -120,7 +122,29 @@ class TestBase(TestCase):
                 tr.bags.append(bag)
             tr.put()
 
-    def login(self, email='user@example.com', id_='123', is_admin=False):
+        # users
+        # admin user
+        u = models.UserPrefs(userid=cls.ADMIN_USERID, name='admin',
+                             email="admin@admin.com", admin=True, authorized=True)
+        u.put()
+
+        # ordinary user1
+        u = models.UserPrefs(userid=cls.ORDINARY_USERID, name="user",
+                             email="user1@user1.com", admin=False, authorized=True)
+        u.put()
+
+        # ordinary user1
+        u = models.UserPrefs(userid=cls.ORDINARY_USERID * 2, name="user2",
+                             email="user2@user2.com", admin=False, authorized=True)
+        u.put()
+
+    def login(self, is_admin=False, email=None, id_=None):
+        if id_ is None or email is None:
+            from .. import models
+            u = models.UserPrefs.query().filter(models.UserPrefs.admin == is_admin).get()
+            email = u.email
+            id_ = u.userid
+
         self.testbed.setup_env(
             user_email=email,
             user_id=id_,
@@ -395,6 +419,67 @@ class TestTransfusion(TestBase):
 
         from .. import models
         self.assertListEqual(rv.json['locals'], models.valid_locals)
+
+class TestUser(TestBase):
+    def testUpdateUserNotLoggedAsAdmin(self):
+        self.fixtureCreateSomeData()
+
+        from .. import models
+        u1, u2 = models.UserPrefs.query(models.UserPrefs.admin == False).fetch(2)
+        self.login(email=u1.email, id_=u1.userid)
+
+        user_data = {'id': u2.userid, 'authorized':False}
+
+        rv = self.client.put(url_for('user.update'), data=json.dumps(user_data),
+                          content_type='application/json')
+        self.assert403(rv)
+
+    def testUpdateUserLoggedAsAdmin(self):
+        self.fixtureCreateSomeData()
+
+        from .. import models
+        u1, u2 = models.UserPrefs.query(models.UserPrefs.admin == False).fetch(2)
+        self.login(email=u1.email, id_=u1.userid, is_admin=True)
+
+        user_data = {'id': u2.userid,
+                     'authorized':False,
+                     'email': u2.email,
+                     'name': u2.name}
+
+        rv = self.client.put(url_for('user.update'), data=json.dumps(user_data),
+                          content_type='application/json')
+        self.assert200(rv)
+
+    def testUpdateUserLoggedAsHimself(self):
+        self.fixtureCreateSomeData()
+
+        from .. import models
+        u = models.UserPrefs.query(models.UserPrefs.admin == False).get()
+        self.login(email=u.email, id_=u.userid)
+
+        user_data = {'id': u.userid,
+                     'email': u.email + "123",
+                     'name': u.name + 'as'}
+
+        rv = self.client.put(url_for('user.update'), data=json.dumps(user_data),
+                          content_type='application/json')
+        self.assert200(rv)
+
+    def testUpdateUserLoggedAsHimselfInvalidFields(self):
+        self.fixtureCreateSomeData()
+
+        from .. import models
+        u = models.UserPrefs.query(models.UserPrefs.admin == False).get()
+        self.login(email=u.email, id_=u.userid)
+
+        user_data = {'id': u.userid,
+                     'email': u.email,
+                     'name': u.name,
+                     'authorized': True}
+
+        rv = self.client.put(url_for('user.update'), data=json.dumps(user_data),
+                          content_type='application/json')
+        self.assert403(rv)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

@@ -1,3 +1,8 @@
+'''
+Created on 08/12/2015
+
+@author: Iuri Diniz <iuridiniz@gmail.com>
+'''
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
@@ -20,15 +25,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-'''
-Created on 08/12/2015
-
-@author: Iuri Diniz <iuridiniz@gmail.com>
-'''
+from google.appengine.api import users
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 
 from .util import onlynumbers, iconv, tokenize
+
 # Models
 blood_types = ('A+', 'B+', 'AB+', "O+", 'A-', 'B-', 'AB-', "O-")
 blood_contents = ('CHPL', 'CP', 'PF', 'CHPLI')
@@ -40,7 +42,45 @@ transfusion_tags = ['semrt', 'rt', "ficha-preenchida", "carimbo-plantao",
 
 valid_actions = ["create", 'update']
 
+class UserPrefs(ndb.Model):
+    object_version = ndb.IntegerProperty(default=1, required=True)
+
+    userid = ndb.StringProperty(required=True, indexed=True)
+    name = ndb.StringProperty(required=True, indexed=False)
+    authorized = ndb.BooleanProperty(indexed=True, required=True)
+    email = ndb.StringProperty(required=True, indexed=False)
+    admin = ndb.BooleanProperty(required=True, indexed=True)
+
+    @classmethod
+    def get_current(cls):
+        user = users.get_current_user()
+        if user is None:
+            # not logged
+            return None
+        userid = user.user_id()
+        is_admin = users.is_current_user_admin()
+
+        pref = cls.get_by_userid(userid)
+
+        # always create a new pref
+        if pref is None:
+            pref = cls(userid=userid, email=user.email(),
+                       authorized=False, admin=False, name=user.nickname())
+
+        # XXX: upgrade to admin account if is a cloud admin account
+        if is_admin:
+            pref.admin = True
+            pref.authorized = True
+        pref.put()
+        return pref
+
+    @classmethod
+    def get_by_userid(cls, userid):
+        return cls.query(cls.userid == userid).get()
+
 class LogEntry(ndb.Model):
+    object_version = ndb.IntegerProperty(default=1, required=True)
+
     userid = ndb.StringProperty(required=True, indexed=False)
     email = ndb.StringProperty(required=True, indexed=False)
     when = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
@@ -134,4 +174,6 @@ class Transfusion(ndb.Model):
     def get_by_code(cls, code, onlykey=False):
         result = Transfusion.query(ancestor=ndb.Key(TransfusionCode, code)).get(keys_only=onlykey)
         return result
+
+
 

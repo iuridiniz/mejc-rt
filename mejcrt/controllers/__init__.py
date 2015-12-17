@@ -24,5 +24,5 @@
 from . import patient
 from . import root
 from . import transfusion
-
+from . import user
 
