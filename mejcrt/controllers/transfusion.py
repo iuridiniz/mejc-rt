@@ -127,8 +127,6 @@ def create_or_update():
                 pass
         elif patient_record_code:
             patient_key = Patient.get_by_code(patient_record_code, onlykey=True)
-        elif isinstance(patient_dict, dict):
-            patient_key = patient_dict.get('key')
 
         if patient_key is None:
             # no patient key
