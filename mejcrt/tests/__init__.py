@@ -201,7 +201,7 @@ class TestPatient(TestBase):
         key = Patient.query().get(keys_only=True).urlsafe()
         rv = self.client.get(url_for('patient.get', key=key))
         self.assert200(rv)
-        data = rv.json
+        data = rv.json['data']
         self.assertEquals(key, data['key'])
 
     def testHistoryCreateGetUpdateGet(self):
@@ -214,11 +214,11 @@ class TestPatient(TestBase):
                               data=json.dumps(data),
                               content_type='application/json')
         self.assert200(rv)
-        key = rv.json['key']
+        key = rv.json['data']['key']
 
         # get
         rv = self.client.get(url_for('patient.get', key=key))
-        got_data = rv.json
+        got_data = rv.json['data']
         self.assert200(rv)
         data['key'] = key
         self.assertEquals(len(got_data['logs']), 1)
@@ -232,12 +232,12 @@ class TestPatient(TestBase):
                               data=json.dumps(data),
                               content_type='application/json')
         self.assert200(rv)
-        key = rv.json['key']
+        key = rv.json['data']['key']
         self.assertEquals(data['key'], key)
 
         # get
         rv = self.client.get(url_for('patient.get', key=key))
-        got_data = rv.json
+        got_data = rv.json['data']
         self.assert200(rv)
         data['key'] = key
         self.assertEquals(len(got_data['logs']), 2)
@@ -312,8 +312,8 @@ class TestTransfusion(TestBase):
         self.login()
         key = models.Transfusion.query().get(keys_only=True)
         rv = self.client.get(url_for('transfusion.get', key=key.urlsafe()))
-
-        self.assertEquals(key.urlsafe(), rv.json['key'])
+        got_data = rv.json['data']
+        self.assertEquals(key.urlsafe(), got_data['key'])
 
     def testGetNotLogged(self):
         rv = self.client.get(url_for('transfusion.get', key=123))
@@ -328,7 +328,7 @@ class TestTransfusion(TestBase):
         rv = self.client.get(url_for('transfusion.search', **query))
         self.assert200(rv)
         self.assertIsNotNone(rv.json)
-        data = rv.json
+        data = rv.json['data']
         self.assertIn(tr.key.urlsafe(), data['keys'])
 
     def testSearchPatientName(self):
@@ -340,7 +340,7 @@ class TestTransfusion(TestBase):
         rv = self.client.get(url_for('transfusion.search', **query))
         self.assert200(rv)
         self.assertIsNotNone(rv.json)
-        data = rv.json
+        data = rv.json['data']
         self.assertIn(tr.key.urlsafe(), data['keys'])
 
     def testSearchCode(self):
@@ -352,7 +352,7 @@ class TestTransfusion(TestBase):
         rv = self.client.get(url_for('transfusion.search', **query))
         self.assert200(rv)
         self.assertIsNotNone(rv.json)
-        data = rv.json
+        data = rv.json['data']
         self.assertIn(tr.key.urlsafe(), data['keys'])
 
     def testSearchNotLogged(self):
@@ -363,7 +363,7 @@ class TestTransfusion(TestBase):
         self.login()
         rv = self.client.get(url_for('transfusion.search', q=123))
         self.assert200(rv)
-        data = rv.json
+        data = rv.json['data']
         self.assertEquals(data['keys'], [])
 
     def testHistoryCreateGetUpdateGet(self):
@@ -374,13 +374,13 @@ class TestTransfusion(TestBase):
         rv = self.client.post(url_for('transfusion.upinsert'), data=json.dumps(data),
                           content_type='application/json')
         self.assert200(rv)
-        data['key'] = rv.json['key']
+        data['key'] = rv.json['data']['key']
 
         # get
-        rv = self.client.get(url_for('transfusion.get', key=rv.json['key']))
+        rv = self.client.get(url_for('transfusion.get', key=data['key']))
         self.assert200(rv)
 
-        got_data = rv.json
+        got_data = rv.json['data']
         self.assertEquals(len(got_data['logs']), 1)
         self.assertEquals(got_data['logs'][0]['action'], 'create')
         del got_data['logs']
@@ -394,10 +394,10 @@ class TestTransfusion(TestBase):
         self.assert200(rv)
 
         # get
-        rv = self.client.get(url_for('transfusion.get', key=rv.json['key']))
+        rv = self.client.get(url_for('transfusion.get', key=rv.json['data']['key']))
         self.assert200(rv)
 
-        got_data = rv.json
+        got_data = rv.json['data']
         self.assertEquals(len(got_data['logs']), 2)
         self.assertEquals(got_data['logs'][0]['action'], 'create')
         self.assertEquals(got_data['logs'][1]['action'], 'update')
@@ -418,7 +418,7 @@ class TestTransfusion(TestBase):
         self.assert200(rv)
 
         from .. import models
-        self.assertListEqual(rv.json['locals'], models.valid_locals)
+        self.assertListEqual(rv.json['data']['locals'], models.valid_locals)
 
 class TestUser(TestBase):
     def testUpdateUserNotLoggedAsAdmin(self):
