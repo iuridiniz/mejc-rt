@@ -59,13 +59,13 @@ def search():
 
     if query_patient_code:
         keys = Patient.query().filter(Patient.code_tags == query_patient_code).fetch(keys_only=True)
-        query = Transfusion.query().filter(Transfusion.patient_key.IN(keys))
+        query = Transfusion.query().filter(Transfusion.patient.IN(keys))
     elif query_code:
         query = Transfusion.query().filter(Transfusion.code == query_code)
     elif query_patient_name:
         query_patient_name = iconv(query_patient_name).lower()
         keys = Patient.query().filter(Patient.name_tags == query_patient_name).fetch(keys_only=True)
-        query = Transfusion.query().filter(Transfusion.patient_key.IN(keys))
+        query = Transfusion.query().filter(Transfusion.patient.IN(keys))
 
     keys = []
     if query:
@@ -85,30 +85,7 @@ def get(key):
     if tr is None:
         return make_response(jsonify(code="Not Found"), 404, {})
 
-    ret = {
-        "key": tr.key.urlsafe(),
-        "patient_key": tr.patient_key.urlsafe(),
-        "date": tr.date.strftime("%Y-%m-%d"),
-        "local": tr.local,
-        "bags" :
-        [
-            {
-                "type": bag.type_,
-                "content": bag.content
-            } for bag in tr.bags
-        ],
-        "text": tr.text,
-        "tags": tr.tags,
-        "code": tr.code,
-        'logs': [
-             {
-                'email': log.email,
-                'action': log.action,
-                'when': log.when.strftime("%Y-%m-%d %H:%M:%S"),
-              } for log in tr.logs
-         ]
-    }
-    return make_response(jsonify(data=ret, code='OK'), 200, {})
+    return make_response(jsonify(data=tr.to_dict(), code='OK'), 200, {})
 
 @app.route("/api/v1/transfusion", methods=['POST', 'PUT'],
            endpoint="transfusion.upinsert")
@@ -130,7 +107,7 @@ def create_or_update():
         except ProtocolBufferDecodeError:
             logging.error("Cannot create TR from %r: %r" % (request.json, 'invalid transfusion key'))
             return make_response(jsonify(code="Not Found"), 404, {})
-        patient_key = tr.patient_key
+        patient_key = tr.patient
         tr_code = tr.code
     else:
         # create a new transfusion
@@ -139,6 +116,11 @@ def create_or_update():
         patient_key = None
         patient_key_url_safe = request.json.get('patient_key', None)
         patient_record_code = request.json.get('record', None)
+        patient_dict = request.json.get('patient', dict())
+
+        if patient_key_url_safe is None and isinstance(patient_dict, dict):
+            patient_key_url_safe = patient_dict.get('key')
+
         if patient_key_url_safe is not None:
             try:
                 patient_key = ndb.Key(urlsafe=patient_key_url_safe)
@@ -146,6 +128,8 @@ def create_or_update():
                 pass
         elif patient_record_code:
             patient_key = Patient.get_by_code(patient_record_code, onlykey=True)
+        elif isinstance(patient_dict, dict):
+            patient_key = patient_dict.get('key')
 
         if patient_key is None:
             # no patient key
@@ -171,7 +155,7 @@ def create_or_update():
     logs.append(LogEntry.from_user(users.get_current_user(), is_new))
     try:
 
-        tr.populate(patient_key=patient_key,
+        tr.populate(patient=patient_key,
                     code=tr_code,
                     date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
                     local=transfusion_local,

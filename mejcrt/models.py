@@ -1,8 +1,3 @@
-'''
-Created on 08/12/2015
-
-@author: Iuri Diniz <iuridiniz@gmail.com>
-'''
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
@@ -25,6 +20,8 @@ Created on 08/12/2015
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import datetime
+
 from google.appengine.api import users
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
@@ -71,7 +68,60 @@ transfusion_tags = ('semrt',
 
 valid_actions = ["create", 'update']
 
-class UserPrefs(ndb.Model):
+
+class Model(ndb.Model):
+    __dict_include__ = None
+    __dict_exclude__ = None
+
+    @classmethod
+    def _parse_data(cls, d):
+        # remove _ at 'end'
+        # FIXME: circular objects (make a set of ids)
+        ret = d
+        if isinstance(d, dict):
+            ret = {}
+            for k, v in d.iteritems():
+                v = cls._parse_data(v)
+
+                new_key = k
+                while len(new_key) and new_key[-1] == '_':
+                    new_key = new_key[:-1]
+                ret[new_key] = v
+        elif isinstance(d, (list, tuple)):
+            ret = []
+            for v in iter(d):
+                ret.append(cls._parse_data(v))
+
+        return ret
+
+    @ndb.utils.positional(1)
+    def to_dict(self, include=None, exclude=None):
+        if include is None and self.__dict_include__:
+            include = self.__dict_include__
+        if exclude is None and self.__dict_exclude__:
+            exclude = self.__dict_exclude__
+
+        ret = super(Model, self).to_dict(include=include, exclude=exclude)
+        for k, v in ret.iteritems():
+            # json friendly
+            if isinstance(v, ndb.Key):
+                v = v.get()
+
+            if isinstance(v, ndb.Model):
+                v = v.to_dict()
+                ret[k] = v
+            elif isinstance(v, (datetime.datetime, datetime.date, datetime.time)):
+                ret[k] = str(v)
+
+        # insert key as urlsafe
+        if (include and 'key' in include) or (exclude and 'key' not in exclude):
+            ret['key'] = self.key.urlsafe()
+
+        return self._parse_data(ret)
+
+class UserPrefs(Model):
+    __dict_include__ = ['userid', 'name', 'email', 'admin']
+
     object_version = ndb.IntegerProperty(default=1, required=True)
 
     userid = ndb.StringProperty(required=True, indexed=True)
@@ -107,7 +157,9 @@ class UserPrefs(ndb.Model):
     def get_by_userid(cls, userid):
         return cls.query(cls.userid == userid).get()
 
-class LogEntry(ndb.Model):
+class LogEntry(Model):
+    __dict_exclude__ = ['object_version']
+
     object_version = ndb.IntegerProperty(default=1, required=True)
 
     userid = ndb.StringProperty(required=True, indexed=False)
@@ -120,10 +172,12 @@ class LogEntry(ndb.Model):
         return cls(userid=user.user_id(), email=user.email(),
                    action="create" if is_new else "update")
 
-class PatientCode(ndb.Model):
+class PatientCode(Model):
     pass
 
-class Patient(ndb.Model):
+class Patient(Model):
+    __dict_exclude__ = ['name_tags', 'code_tags', 'object_version']
+
     object_version = ndb.IntegerProperty(default=1, required=True)
 
     name = ndb.StringProperty(indexed=False, required=True)
@@ -155,17 +209,19 @@ class Patient(ndb.Model):
         result = Patient.query(ancestor=ndb.Key(PatientCode, code)).get(keys_only=onlykey)
         return result
 
-class BloodBag(ndb.Model):
+class BloodBag(Model):
     type_ = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
     content = ndb.StringProperty()
 
-class TransfusionCode(ndb.Model):
+class TransfusionCode(Model):
     pass
 
-class Transfusion(ndb.Model):
+class Transfusion(Model):
+    __dict_exclude__ = ['object_version', 'added_at', 'updated_at']
+
     object_version = ndb.IntegerProperty(default=1, required=True)
 
-    patient_key = ndb.KeyProperty(Patient, required=True, indexed=True)
+    patient = ndb.KeyProperty(Patient, required=True, indexed=True)
     code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
     date = ndb.DateProperty(indexed=True, required=True)
 
@@ -180,10 +236,6 @@ class Transfusion(ndb.Model):
 
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
     updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
-
-    @property
-    def patient(self):
-        return self.patient_key.get()
 
     @ndb.transactional
     def put(self, **ctx_options):
@@ -203,6 +255,3 @@ class Transfusion(ndb.Model):
     def get_by_code(cls, code, onlykey=False):
         result = Transfusion.query(ancestor=ndb.Key(TransfusionCode, code)).get(keys_only=onlykey)
         return result
-
-
-

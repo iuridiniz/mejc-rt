@@ -104,7 +104,7 @@ class TestBase(TestCase):
         # transfusions
         for _ in range(10):
             tr = models.Transfusion()
-            tr.patient_key = p.key
+            tr.patient = p.key
             tr.code = str(code.next())
             tr.date = random_date()
             tr.local = random.choice(models.valid_locals)
@@ -245,7 +245,7 @@ class TestTransfusion(TestBase):
     tr_data = {u'bags': [{u'content': u'CHPLI', u'type': u'O-'}],
                 u'date': u'2015-05-22',
                 u'local': u'Sem registro',
-                u'patient_key': None,
+                u'patient': None,
                 u'code': u'20900',
                 u'tags': [u'rt'],
                 u'text': u'some test'}
@@ -255,7 +255,8 @@ class TestTransfusion(TestBase):
         self.fixtureCreateSomeData()
         self.data = deepcopy(self.tr_data)
         from .. import models
-        self.data['patient_key'] = models.Patient.query().get(keys_only=True).urlsafe()
+        self.data['patient'] = dict(
+                key=models.Patient.query().get(keys_only=True).urlsafe())
 #     def _fixtureCreatePatient(self, data=None):
 #         if data is None:
 #             data = TestPatient.patient_data.copy()
@@ -319,7 +320,7 @@ class TestTransfusion(TestBase):
         self.login()
         tr = models.Transfusion.query().get()
 
-        query = dict(patient_code=tr.patient.code)
+        query = dict(patient_code=tr.patient.get().code)
         rv = self.client.get(url_for('transfusion.search', **query))
         self.assert200(rv)
         self.assertIsNotNone(rv.json)
@@ -331,7 +332,7 @@ class TestTransfusion(TestBase):
         self.login()
         tr = models.Transfusion.query().get()
 
-        query = dict(patient_name=tr.patient.name)
+        query = dict(patient_name=tr.patient.get().name)
         rv = self.client.get(url_for('transfusion.search', **query))
         self.assert200(rv)
         self.assertIsNotNone(rv.json)
@@ -365,12 +366,12 @@ class TestTransfusion(TestBase):
         self.login()
         data = self.data
 
+
         # create
         rv = self.client.post(url_for('transfusion.upinsert'), data=json.dumps(data),
                           content_type='application/json')
         self.assert200(rv)
-        data['key'] = rv.json['data']['key']
-
+        data[u'key'] = rv.json['data']['key']
         # get
         rv = self.client.get(url_for('transfusion.get', key=data['key']))
         self.assert200(rv)
@@ -379,7 +380,12 @@ class TestTransfusion(TestBase):
         self.assertEquals(len(got_data['logs']), 1)
         self.assertEquals(got_data['logs'][0]['action'], 'create')
         del got_data['logs']
-        self.assertDictEqual(got_data, data)
+
+        self.assertEquals(got_data['patient']['key'], data['patient']['key'])
+        del got_data['patient']
+        data_without_patient = data.copy()
+        del data_without_patient['patient']
+        self.assertDictEqual(got_data, data_without_patient)
 
         # update
         data['tags'] = ['semrt']
@@ -397,7 +403,12 @@ class TestTransfusion(TestBase):
         self.assertEquals(got_data['logs'][0]['action'], 'create')
         self.assertEquals(got_data['logs'][1]['action'], 'update')
         del got_data['logs']
-        self.assertDictEqual(got_data, data)
+
+        self.assertEquals(got_data['patient']['key'], data['patient']['key'])
+        del got_data['patient']
+        data_without_patient = data.copy()
+        del data_without_patient['patient']
+        self.assertDictEqual(got_data, data_without_patient)
 
     def testUpdateNotFound(self):
         self.login()

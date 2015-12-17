@@ -86,18 +86,4 @@ def get(key):
     if p is None:
         return make_response(jsonify(code="Not Found"), 404, {})
 
-    ret = {
-        "key": p.key.urlsafe(),
-        "name": p.name,
-        "code": p.code,
-        "type": p.type_,
-        "blood_type": p.blood_type,
-        'logs': [
-             {
-                'email': log.email,
-                'action': log.action,
-                'when': log.when.strftime("%Y-%m-%d %H:%M:%S"),
-              } for log in p.logs
-         ]
-    }
-    return make_response(jsonify(data=ret, code='OK'), 200, {})
+    return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
