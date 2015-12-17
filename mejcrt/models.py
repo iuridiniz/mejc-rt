@@ -32,13 +32,36 @@ from google.appengine.ext import ndb
 from .util import onlynumbers, iconv, tokenize
 
 # Models
-blood_types = ('A+', 'B+', 'AB+', "O+", 'A-', 'B-', 'AB-', "O-")
-blood_contents = ('CHPL', 'CP', 'PF', 'CHPLI')
-patient_types = ("RN", "G", "O")
-valid_locals = ["unidade-a", "unidade-b", 'unidade-b4', 'alto-risco',
-        'uti-neonatal', 'uti-materna', 'sem-registro']
-transfusion_tags = ['semrt', 'rt', "ficha-preenchida", "carimbo-plantao",
-        "carimbo-nhh", "anvisa", "visitado"]
+blood_types = ('O-',
+               'O+',
+               'A-',
+               'A+',
+               'B-',
+               'B+',
+               'AB-',
+               'AB+')
+blood_contents = ('CHPL',
+                  'CHPLI',
+                  'CHD',
+                  'CHI',
+                  'PF',
+                  'CP',
+                  'CRIO'
+                  'ST')
+
+patient_types = (u'Rec\xe9m-nascido',
+                 u'Ginecol\xf3gico',
+                 u'Obst\xe9trico')
+
+valid_locals = ("Unidade A (Anexo)",
+                "Unidade B",
+                'Unidade B4',
+                'Alto risco',
+                'UTI Neonatal',
+                'UTI Materna',
+                'Sem registro')
+transfusion_tags = ('semrt', 'rt', "ficha-preenchida", "carimbo-plantao",
+        "carimbo-nhh", "anvisa", "visitado")
 
 valid_actions = ["create", 'update']
 

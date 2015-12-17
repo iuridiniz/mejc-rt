@@ -166,7 +166,7 @@ class TestRoot(TestBase):
 class TestPatient(TestBase):
     patient_data = {u'blood_type': u'O+',
                      u'name': u'John Heyder Oliveira de Medeiros Galv\xe3o',
-                     u'type': u'RN',
+                     u'type': u'Rec\xe9m-nascido',
                      u'code': u'123450', }
 
     def setUp(self):
@@ -249,7 +249,7 @@ class TestPatient(TestBase):
 class TestTransfusion(TestBase):
     tr_data = {u'bags': [{u'content': u'CHPLI', u'type': u'O-'}],
                 u'date': u'2015-05-22',
-                u'local': u'uti-neonatal',
+                u'local': u'Sem registro',
                 u'patient_key': None,
                 u'code': u'20900',
                 u'tags': [u'rt'],
@@ -418,7 +418,7 @@ class TestTransfusion(TestBase):
         self.assert200(rv)
 
         from .. import models
-        self.assertListEqual(rv.json['data']['locals'], models.valid_locals)
+        self.assertListEqual(rv.json['data']['locals'], list(models.valid_locals))
 
     def testGetBloodTypes(self):
         self.login()
