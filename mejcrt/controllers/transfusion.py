@@ -38,7 +38,7 @@ from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
-from mejcrt.models import valid_locals
+from mejcrt.models import valid_locals, blood_types, blood_contents
 
 from ..app import app
 from ..models import Transfusion, Patient, BloodBag, LogEntry
@@ -190,3 +190,17 @@ def create_or_update():
 @require_login()
 def get_locals():
     return make_response(jsonify(data=dict(locals=valid_locals), code="OK"), 200, {})
+
+@app.route("/api/v1/transfusion/blood/types",
+           methods=["GET"],
+           endpoint="transfusion.blood.types")
+@require_login()
+def get_blood_types():
+    return make_response(jsonify(data=dict(types=blood_types), code="OK"), 200, {})
+
+@app.route("/api/v1/transfusion/blood/contents",
+           methods=["GET"],
+           endpoint="transfusion.blood.contents")
+@require_login()
+def get_blood_contents():
+    return make_response(jsonify(data=dict(contents=blood_contents), code="OK"), 200, {})

@@ -420,6 +420,18 @@ class TestTransfusion(TestBase):
         from .. import models
         self.assertListEqual(rv.json['data']['locals'], models.valid_locals)
 
+    def testGetBloodTypes(self):
+        self.login()
+        rv = self.client.get(url_for('transfusion.blood.types'))
+        from .. import models
+        self.assertListEqual(rv.json['data']['types'], list(models.blood_types))
+
+    def testGetBloodContents(self):
+        self.login()
+        rv = self.client.get(url_for('transfusion.blood.contents'))
+        from .. import models
+        self.assertListEqual(rv.json['data']['contents'], list(models.blood_contents))
+
 class TestUser(TestBase):
     def testUpdateUserNotLoggedAsAdmin(self):
         self.fixtureCreateSomeData()
