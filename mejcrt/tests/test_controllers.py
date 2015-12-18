@@ -1,6 +1,5 @@
 from copy import deepcopy
 import unittest
-from urllib import urlencode
 
 from flask import json
 from flask.helpers import url_for
