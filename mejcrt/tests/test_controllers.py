@@ -221,7 +221,6 @@ class TestTransfusion(TestBase):
         key = models.Transfusion.query().get(keys_only=True)
         rv = self.client.get(url_for('transfusion.get', key=key.urlsafe()))
         got_data = rv.json['data']
-        print got_data
         self.assertEquals(len(got_data), 1)
         self.assertEquals(key.urlsafe(), got_data[0]['key'])
 

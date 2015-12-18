@@ -37,6 +37,7 @@ blood_types = ('O-',
                'B+',
                'AB-',
                'AB+')
+
 blood_contents = ('CH',
                   'CHPL',
                   'CHPLI',
@@ -67,7 +68,6 @@ transfusion_tags = ('semrt',
                     'visitado')
 
 valid_actions = ["create", 'update']
-
 
 class Model(ndb.Model):
     __dict_include__ = None
