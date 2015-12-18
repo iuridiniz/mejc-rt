@@ -36,10 +36,16 @@ from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
 from mejcrt.models import UserPrefs, patient_types
+from mejcrt.util import iconv
 
 from ..app import app
 from ..models import Patient, LogEntry
 from .decorators import require_login
+
+
+def parse_fields(f):
+    "transform to lowercase, remove any spaces and split on ','"
+    return (''.join(f.lower().split())).split(',')
 
 @app.route("/api/v1/patient", methods=['POST', 'PUT'], endpoint="patient.upinsert")
 @require_login()
@@ -77,6 +83,29 @@ def create_or_update():
         return make_response(jsonify(code="Bad Request"), 400, {})
 
     return make_response(jsonify(code="OK", data=dict(key=key.urlsafe())), 200, {})
+
+@app.route("/api/v1/patient/search/<query>", methods=["GET"],
+           endpoint="patient.search")
+@require_login()
+def search(query):
+    if not hasattr(request, 'args'):
+        return make_response(jsonify(code="Bad Request"), 400, {})
+    fields = parse_fields(request.args.get('fields', 'name'))
+    max_ = int(request.args.get('max', '20'))
+
+    if max_ > 40:
+        max_ = 40
+    if max < 1:
+        return make_response(jsonify(code="OK", data=[]), 200, {})
+    filters = []
+    if "name" in fields:
+        filters.append(Patient.name_tags == iconv(query).strip().lower())
+    if "code" in fields:
+        filters.append(Patient.code_tags == query)
+    objs = Patient.query(ndb.OR(*filters)).fetch(max_)
+    return make_response(jsonify(data=[p.to_dict() for p in objs],
+                                 code='OK'), 200, {})
+
 
 @app.route("/api/v1/patient/<key>", methods=["GET"], endpoint="patient.get")
 @require_login()

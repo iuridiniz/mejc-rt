@@ -148,6 +148,32 @@ class TestPatient(TestBase):
         from .. import models
         self.assertListEqual(rv.json['data']['types'], list(models.patient_types))
 
+    def testSearchPatientName(self):
+        from .. import models
+        self.login()
+        p = models.Patient.query().get()
+
+        query = dict(query=p.name, fields="name")
+        rv = self.client.get(url_for('patient.search', **query))
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals(len(data), 1)
+        self.assertEquals(p.key.urlsafe(), data[0]['key'])
+
+    def testSearchPatientCode(self):
+        from .. import models
+        self.login()
+        p = models.Patient.query().get()
+
+        query = dict(query=p.code, fields="code")
+        rv = self.client.get(url_for('patient.search', **query))
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals(len(data), 1)
+        self.assertEquals(p.key.urlsafe(), data[0]['key'])
+
 class TestTransfusion(TestBase):
     tr_data = {u'bags': [{u'content': u'CHPLI', u'type': u'O-'}],
                 u'date': u'2015-05-22',
