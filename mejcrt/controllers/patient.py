@@ -35,7 +35,7 @@ from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
-from mejcrt.models import UserPrefs
+from mejcrt.models import UserPrefs, patient_types
 
 from ..app import app
 from ..models import Patient, LogEntry
@@ -88,3 +88,10 @@ def get(key):
         return make_response(jsonify(code="Not Found"), 404, {})
 
     return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
+
+@app.route("/api/v1/patient/types",
+           methods=["GET"],
+           endpoint="patient.types")
+@require_login()
+def get_blood_contents():
+    return make_response(jsonify(data=dict(types=patient_types), code="OK"), 200, {})

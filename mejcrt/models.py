@@ -60,11 +60,11 @@ valid_locals = ("Unidade A (Anexo)",
                 'Sem registro')
 transfusion_tags = ('semrt',
                     'rt',
-                    "ficha-preenchida",
-                    "carimbo-plantao",
-                    "carimbo-nhh",
-                    "anvisa",
-                    "visitado")
+                    'ficha-preenchida',
+                    'carimbo-plantao',
+                    'carimbo-nhh',
+                    'anvisa',
+                    'visitado')
 
 valid_actions = ["create", 'update']
 
@@ -119,12 +119,14 @@ class UserPrefs(Model):
     __dict_include__ = ['userid', 'name', 'email', 'admin']
 
     object_version = ndb.IntegerProperty(default=1, required=True)
+    added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
+    updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
 
-    userid = ndb.StringProperty(required=True, indexed=True)
+    userid = ndb.ComputedProperty(lambda self: self.key.id())
     name = ndb.StringProperty(required=True, indexed=False)
-    authorized = ndb.BooleanProperty(indexed=True, required=True)
     email = ndb.StringProperty(required=True, indexed=False)
     admin = ndb.BooleanProperty(required=True, indexed=True)
+    authorized = ndb.BooleanProperty(indexed=True, required=True)
 
     @classmethod
     def get_current(cls):
@@ -139,7 +141,7 @@ class UserPrefs(Model):
 
         # always create a new pref
         if pref is None:
-            pref = cls(userid=userid, email=user.email(),
+            pref = cls(id=userid, email=user.email(),
                        authorized=False, admin=False, name=user.nickname())
 
         # XXX: upgrade to admin account if is a cloud admin account
@@ -154,9 +156,6 @@ class UserPrefs(Model):
         return cls.query(cls.userid == userid).get()
 
 class LogEntry(Model):
-    __dict_exclude__ = ['object_version']
-
-    object_version = ndb.IntegerProperty(default=1, required=True)
     user = ndb.KeyProperty(UserPrefs, required=True, indexed=True)
     when = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
     action = ndb.StringProperty(indexed=False, required=True, choices=valid_actions)
@@ -170,9 +169,12 @@ class PatientCode(Model):
     pass
 
 class Patient(Model):
-    __dict_exclude__ = ['name_tags', 'code_tags', 'object_version']
+    __dict_exclude__ = ['name_tags', 'code_tags', 'object_version', 'added_at',
+                        'updated_at']
 
     object_version = ndb.IntegerProperty(default=1, required=True)
+    added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
+    updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
 
     name = ndb.StringProperty(indexed=False, required=True)
     code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
@@ -214,6 +216,8 @@ class Transfusion(Model):
     __dict_exclude__ = ['object_version', 'added_at', 'updated_at']
 
     object_version = ndb.IntegerProperty(default=1, required=True)
+    added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
+    updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
 
     patient = ndb.KeyProperty(Patient, required=True, indexed=True)
     code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
@@ -227,9 +231,6 @@ class Transfusion(Model):
         choices=transfusion_tags)
     text = ndb.TextProperty(required=False)
     logs = ndb.StructuredProperty(LogEntry, repeated=True)
-
-    added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
-    updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
 
     @ndb.transactional
     def put(self, **ctx_options):
