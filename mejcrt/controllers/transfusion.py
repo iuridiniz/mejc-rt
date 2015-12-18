@@ -74,16 +74,29 @@ def search():
 
     return make_response(jsonify(data=dict(keys=keys), code='OK'), 200, {})
 
-@app.route("/api/v1/transfusion/<key>", methods=["GET"], endpoint="transfusion.get")
+@app.route("/api/v1/transfusion", methods=["GET"],
+           endpoint="transfusion.get")
+@app.route("/api/v1/transfusion/<key>", methods=["GET"],
+           endpoint="transfusion.get")
 @require_login()
-def get(key):
-    key = ndb.Key(urlsafe=key)
+def get(key=None):
+    if key is not None:
+        key = ndb.Key(urlsafe=key)
+        tr = key.get()
+        if tr is None or not isinstance(tr, Transfusion):
+            return make_response(jsonify(code="Not Found"), 404, {})
 
-    tr = key.get()
-    if tr is None:
-        return make_response(jsonify(code="Not Found"), 404, {})
+        return make_response(jsonify(data=[tr.to_dict()], code='OK'), 200, {})
 
-    return make_response(jsonify(data=tr.to_dict(), code='OK'), 200, {})
+    max_ = int(request.args.get('max', '0'))
+    if max_ > 40:
+        max_ = 40
+    if max_ > 0:
+        objs = Transfusion.query().order(-Transfusion.date).fetch(max_)
+        if objs:
+            return make_response(jsonify(data=[tr.to_dict() for tr in objs], code='OK'), 200, {})
+
+    return make_response(jsonify(code="Not Found"), 404, {})
 
 @app.route("/api/v1/transfusion", methods=['POST', 'PUT'],
            endpoint="transfusion.upinsert")

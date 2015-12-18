@@ -196,7 +196,17 @@ class TestTransfusion(TestBase):
         key = models.Transfusion.query().get(keys_only=True)
         rv = self.client.get(url_for('transfusion.get', key=key.urlsafe()))
         got_data = rv.json['data']
-        self.assertEquals(key.urlsafe(), got_data['key'])
+        print got_data
+        self.assertEquals(len(got_data), 1)
+        self.assertEquals(key.urlsafe(), got_data[0]['key'])
+
+    def testGetLast10(self):
+        self.login()
+        query = dict(max=10)
+        rv = self.client.get(url_for('transfusion.get', **query))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertLessEqual(len(data), query['max'])
 
     def testGetNotLogged(self):
         rv = self.client.get(url_for('transfusion.get', key=123))
@@ -264,7 +274,7 @@ class TestTransfusion(TestBase):
         rv = self.client.get(url_for('transfusion.get', key=data['key']))
         self.assert200(rv)
 
-        got_data = rv.json['data']
+        got_data = rv.json['data'][0]
         self.assertEquals(len(got_data['logs']), 1)
         self.assertEquals(got_data['logs'][0]['action'], 'create')
         del got_data['logs']
@@ -285,7 +295,7 @@ class TestTransfusion(TestBase):
         rv = self.client.get(url_for('transfusion.get', key=rv.json['data']['key']))
         self.assert200(rv)
 
-        got_data = rv.json['data']
+        got_data = rv.json['data'][0]
         self.assertEquals(len(got_data['logs']), 2)
         self.assertEquals(got_data['logs'][0]['action'], 'create')
         self.assertEquals(got_data['logs'][1]['action'], 'update')
