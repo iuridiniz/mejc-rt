@@ -33,7 +33,6 @@ import logging
 from flask import request
 from flask.helpers import make_response
 from flask.json import jsonify
-from google.appengine.api import users
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
