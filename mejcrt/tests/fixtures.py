@@ -69,6 +69,13 @@ def fixture_random():
             bag.type_ = random.choice(models.blood_types)
             bag.content = random.choice(models.blood_contents)
             tr.bags.append(bag)
+        if random.choice((True, False)):
+            tr.tags = ['visitado']
+            if random.choice((True, False)):
+                tr.tags.append('rt')
+            else:
+                tr.tags.append('semrt')
+
         tr.put()
 
     # users
