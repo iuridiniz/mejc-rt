@@ -72,21 +72,22 @@ def tokenize(phrase, minimum=None, maximum=None, onlystart=True, combine=True):
                 tokens.add(word)
     else:
         for combination in [" ".join(s) for s in  powerset(words)]:
-            if len(combination) > minimum:
+            if len(combination) >= minimum:
                 tokens.add(combination)
 
-    for word in filter(lambda x: len(x) >= minimum, words):
-        # add partial words
-        length = len(word)
-
-        for i in xrange(1 if onlystart else length):
+    for n, w in enumerate(words):
+        remain = ' '.join(words[n:])
+        length = len(remain)
+        for i in xrange(1 if onlystart else len(w)):
             first = i + minimum
             last = maximum + i
             if last > length:
                 last = length
             if first > length:
                 first = length
-            for j in xrange(i + minimum, last + 1):
-                tokens.add(word[i:j])
+            for j in xrange(first, last + 1):
+                token = remain[i:j].strip()
+                if len(token) >= minimum:
+                    tokens.add(token)
 
     return tokens
