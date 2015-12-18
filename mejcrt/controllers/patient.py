@@ -41,7 +41,6 @@ from ..app import app
 from ..models import Patient, LogEntry
 from .decorators import require_login
 
-
 @app.route("/api/v1/patient", methods=['POST', 'PUT'], endpoint="patient.upinsert")
 @require_login()
 def create_or_update():
