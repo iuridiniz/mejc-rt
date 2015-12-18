@@ -287,7 +287,7 @@ class TestTransfusion(TestBase):
 
         # update
         data['tags'] = ['semrt']
-        rv = self.client.post(url_for('transfusion.upinsert'), data=json.dumps(self.data),
+        rv = self.client.put(url_for('transfusion.upinsert'), data=json.dumps(self.data),
                           content_type='application/json')
         self.assert200(rv)
 
@@ -311,7 +311,7 @@ class TestTransfusion(TestBase):
         self.login()
         data = self.data
         data['key'] = '123'
-        rv = self.client.post(url_for('transfusion.upinsert'), data=json.dumps(self.data),
+        rv = self.client.put(url_for('transfusion.upinsert'), data=json.dumps(self.data),
                           content_type='application/json')
         self.assert404(rv)
 

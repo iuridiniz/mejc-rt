@@ -110,7 +110,7 @@ def create_or_update():
     tr_code = request.json.get('code', None)
     tr = None
     is_new = False
-    if tr_key:
+    if tr_key and request.method == "PUT":
         # update a transfusion
         try:
             key = ndb.Key(urlsafe=tr_key)
@@ -120,7 +120,7 @@ def create_or_update():
             return make_response(jsonify(code="Not Found"), 404, {})
         patient_key = tr.patient
         tr_code = tr.code
-    else:
+    elif tr_key is None and request.method == "POST":
         # create a new transfusion
         is_new = True
 
@@ -146,6 +146,9 @@ def create_or_update():
             return make_response(jsonify(code="Bad Request"), 400, {})
 
         tr = Transfusion()
+    else:
+        logging.error("Cannot create TR from %r: %r (%r)" % (request.json, 'incorrect method', request.method))
+        return make_response(jsonify(code="Bad Request"), 400, {})
 
     transfusion_date = request.json.get('date', None)
     transfusion_local = request.json.get('local', None)
