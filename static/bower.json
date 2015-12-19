@@ -17,8 +17,12 @@
     "tests"
   ],
   "dependencies": {
-    "angular": "~1.4.7",
+    "angular": "~1.4.8",
     "bootstrap": "~3.3.5",
-    "font-awesome": "fontawesome#~4.4.0"
+    "font-awesome": "fontawesome#~4.4.0",
+    "angular-route": "~1.4.8",
+    "bootstrap3-typeahead": "~4.0.0",
+    "AdminLTE": "admin-lte#~2.3.2",
+    "jquery": "~2.1.4"
   }
 }
