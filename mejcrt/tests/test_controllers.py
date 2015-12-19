@@ -197,6 +197,17 @@ class TestTransfusion(TestBase):
                           content_type='application/json')
         self.assert200(rv)
 
+    def testDuplicated(self):
+        self.login()
+        rv = self.client.post(url_for('transfusion.upinsert'),
+                              data=json.dumps(self.data),
+                              content_type='application/json')
+        self.assert200(rv)
+        rv = self.client.post(url_for('transfusion.upinsert'),
+                              data=json.dumps(self.data),
+                              content_type='application/json')
+        self.assert400(rv)
+
     def testCreateEmpty(self):
         self.login()
         rv = self.client.post(url_for('transfusion.upinsert'))
