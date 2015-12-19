@@ -4,7 +4,9 @@ import unittest
 from flask import json
 from flask.helpers import url_for
 from flask_testing.utils import TestCase
+from google.appengine.datastore import datastore_stub_util
 from google.appengine.ext import testbed, ndb
+
 from .fixtures import fixture_random
 
 class TestBase(TestCase):
@@ -19,8 +21,9 @@ class TestBase(TestCase):
         self.testbed = testbed.Testbed()
         # Then activate the testbed, which prepares the service stubs for use.
         self.testbed.activate()
+        policy = datastore_stub_util.PseudoRandomHRConsistencyPolicy(probability=1)
         # Next, declare which service stubs you want to use.
-        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_datastore_v3_stub(consistency_policy=policy)
         self.testbed.init_memcache_stub()
         # Clear ndb's in-context cache between tests.
         # This prevents data from leaking between tests.
