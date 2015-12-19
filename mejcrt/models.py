@@ -172,12 +172,13 @@ class Patient(Model):
     __dict_exclude__ = ['name_tags', 'code_tags', 'object_version', 'added_at',
                         'updated_at']
 
+    code = ndb.ComputedProperty(lambda self: self.key.id())
+
     object_version = ndb.IntegerProperty(default=1, required=True)
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
     updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
 
     name = ndb.StringProperty(indexed=False, required=True)
-    code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
     blood_type = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
     type_ = ndb.StringProperty(indexed=False, required=True,
         choices=patient_types)
@@ -192,17 +193,17 @@ class Patient(Model):
         return list(tokenize(iconv(code.lower())))
 
     @ndb.transactional
-    def put(self, **ctx_options):
-        key = Patient.get_by_code(self.code, onlykey=True)
-        if key and key != self.key:
-            raise BadValueError("Patient.code %r is duplicated" % self.code)
-        if self.key is None:
-            self.key = ndb.Key(PatientCode, self.code, self.__class__, None)
+    def put(self, update=False, **ctx_options):
+        if Patient.get_by_code(self.code):
+            if not update:
+                raise BadValueError("Patient.code %r is duplicated" % self.code)
+        elif update:
+            raise BadValueError("Patient.code %r does not exist" % self.code)
         return super(Patient, self).put(**ctx_options)
 
     @classmethod
-    def get_by_code(cls, code, onlykey=False):
-        result = Patient.query(ancestor=ndb.Key(PatientCode, code)).get(keys_only=onlykey)
+    def get_by_code(cls, *args, **kwargs):
+        result = cls.get_by_id(*args, **kwargs)
         return result
 
 class BloodBag(Model):

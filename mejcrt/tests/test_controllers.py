@@ -75,7 +75,7 @@ class TestPatient(TestBase):
         self.assert200(rv)
 
         from ..models import Patient
-        p = Patient.get_by_code(self.patient_data['code'], False)
+        p = Patient.get_by_code(self.patient_data['code'])
         self.assertIsInstance(p, Patient)
 
     def testDuplicated(self):

@@ -37,19 +37,17 @@ def fixture_random():
     code = count(24400)
 
     # patients
-    p = models.Patient()
+    p = models.Patient(id=str(code.next()))
     # name with accent
     p.name = u'John Heyder Oliveira de Medeiros Galv\xe3o'
-    p.code = str(code.next())
     p.blood_type = random.choice(models.blood_types)
     p.type_ = random.choice(models.patient_types)
     p.put()
 
     keys = [p.key]
     for _ in range(5):
-        p = models.Patient()
+        p = models.Patient(id=str(code.next()))
         p.name = names.get_full_name()
-        p.code = str(code.next())
         p.blood_type = random.choice(models.blood_types)
         p.type_ = random.choice(models.patient_types)
         p.put()

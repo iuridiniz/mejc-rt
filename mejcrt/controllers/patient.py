@@ -66,7 +66,7 @@ def create_or_update():
             pass
     else:
         is_new = True
-        patient = Patient()
+        patient = Patient(id=code)
 
     logs = patient.logs or []
     logs.append(LogEntry.from_user(UserPrefs.get_current(), is_new))
@@ -76,8 +76,8 @@ def create_or_update():
     type_ = request.json.get('type', '')
     blood_type = request.json.get('blood_type', None)
     try:
-        patient.populate(name=name, code=code, type_=type_, blood_type=blood_type, logs=logs)
-        key = patient.put()
+        patient.populate(name=name, type_=type_, blood_type=blood_type, logs=logs)
+        key = patient.put(update=not is_new)
     except BadValueError as e:
         logging.error("Cannot create Patient from %r: %r" % (request.json, e))
         return make_response(jsonify(code="Bad Request"), 400, {})
