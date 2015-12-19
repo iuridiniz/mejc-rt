@@ -188,7 +188,7 @@ class Patient(Model):
     code_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_code(self.code), repeated=True)
 
     def _gen_tokens_for_name(self, name):
-        return list(tokenize(iconv(name.lower()), minimum=4, maximum=4))
+        return list(tokenize(iconv(name.lower()), minimum=4, maximum=16))
     def _gen_tokens_for_code(self, code):
         return list(tokenize(iconv(code.lower())))
 
