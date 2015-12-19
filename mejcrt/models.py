@@ -141,7 +141,7 @@ class UserPrefs(Model):
 
         # always create a new pref
         if pref is None:
-            pref = cls(id=userid, email=user.email(),
+            pref = cls(id=str(userid), email=user.email(),
                        authorized=False, admin=False, name=user.nickname())
 
         # XXX: upgrade to admin account if is a cloud admin account
@@ -152,8 +152,8 @@ class UserPrefs(Model):
         return pref
 
     @classmethod
-    def get_by_userid(cls, userid):
-        return cls.query(cls.userid == userid).get()
+    def get_by_userid(cls, *args):
+        return cls.get_by_id(*args)
 
 class LogEntry(Model):
     user = ndb.KeyProperty(UserPrefs, required=True, indexed=True)
