@@ -55,9 +55,8 @@ def fixture_random():
 
     # transfusions
     for _ in range(40):
-        tr = models.Transfusion()
+        tr = models.Transfusion(id=str(code.next()))
         tr.patient = random.choice(keys)
-        tr.code = str(code.next())
         tr.date = random_date()
         tr.local = random.choice(models.valid_locals)
         tr.text = random_text()

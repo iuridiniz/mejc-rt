@@ -36,7 +36,7 @@ def iconv(input_str):
         input_str = input_str.decode('utf-8')
     return normalize("NFKD", input_str).encode('ascii', 'ignore')
 
-def onlynumbers(obj, input_str, *args, **kwargs):
+def onlynumbers(input_str, *args, **kwargs):
     return ''.join(filter(lambda x: x.isdigit(), str(input_str)))
 
 def powerset(iterable):

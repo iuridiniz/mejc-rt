@@ -194,11 +194,11 @@ class Patient(Model):
 
     @ndb.transactional
     def put(self, update=False, **ctx_options):
-        if Patient.get_by_code(self.code):
+        if self.get_by_code(self.code):
             if not update:
-                raise BadValueError("Patient.code %r is duplicated" % self.code)
+                raise BadValueError("Code %r is duplicated" % self.code)
         elif update:
-            raise BadValueError("Patient.code %r does not exist" % self.code)
+            raise BadValueError("Code %r does not exist" % self.code)
         return super(Patient, self).put(**ctx_options)
 
     @classmethod
@@ -210,9 +210,6 @@ class BloodBag(Model):
     type_ = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
     content = ndb.StringProperty()
 
-class TransfusionCode(Model):
-    pass
-
 class Transfusion(Model):
     __dict_exclude__ = ['object_version', 'added_at', 'updated_at']
 
@@ -221,7 +218,7 @@ class Transfusion(Model):
     updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
 
     patient = ndb.KeyProperty(Patient, required=True, indexed=True)
-    code = ndb.StringProperty(indexed=True, required=True, validator=onlynumbers)
+    code = ndb.ComputedProperty(lambda self: self.key.id())
     date = ndb.DateProperty(indexed=True, required=True)
 
     local = ndb.StringProperty(indexed=False, required=True,
@@ -233,21 +230,19 @@ class Transfusion(Model):
     text = ndb.TextProperty(required=False)
     logs = ndb.StructuredProperty(LogEntry, repeated=True)
 
-    @ndb.transactional
-    def put(self, **ctx_options):
-        key = self.get_by_code(self.code, onlykey=True)
-        if key and key != self.key:
-            raise BadValueError("Transfusion.code %r is duplicated" % self.code)
+    @ndb.transactional(xg=True)
+    def put(self, update=False, **ctx_options):
+        if self.patient.get() is None:
+            raise BadValueError("Patient %r does not exist" % self.patient)
 
-        # inject key
-        if self.key is None:
-#             key_flat = ndb.Key(TransfusionCode, self.code, self.__class__, None).flat()
-#             key_flat = self.patient_key.flat() + key_flat
-#             self.key = ndb.Key(*key_flat)
-            self.key = ndb.Key(TransfusionCode, self.code, self.__class__, None)
-        return ndb.Model.put(self, **ctx_options)
+        if self.get_by_code(self.code):
+            if not update:
+                raise BadValueError("Code %r is duplicated" % self.code)
+        elif update:
+            raise BadValueError("Code %r does not exist" % self.code)
+        return super(Transfusion, self).put(**ctx_options)
 
     @classmethod
-    def get_by_code(cls, code, onlykey=False):
-        result = Transfusion.query(ancestor=ndb.Key(TransfusionCode, code)).get(keys_only=onlykey)
+    def get_by_code(cls, *args, **kwargs):
+        result = cls.get_by_id(*args, **kwargs)
         return result

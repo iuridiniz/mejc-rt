@@ -38,6 +38,7 @@ from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
 from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs
+from mejcrt.util import onlynumbers
 
 from ..app import app
 from ..models import Transfusion, Patient, BloodBag, LogEntry
@@ -107,7 +108,6 @@ def create_or_update():
         return make_response(jsonify(code="Bad Request"), 400, {})
 
     tr_key = request.json.get('key', None)
-    tr_code = request.json.get('code', None)
     tr = None
     is_new = False
     if tr_key and request.method == "PUT":
@@ -119,11 +119,13 @@ def create_or_update():
             logging.error("Cannot create TR from %r: %r" % (request.json, 'invalid transfusion key'))
             return make_response(jsonify(code="Not Found"), 404, {})
         patient_key = tr.patient
-        tr_code = tr.code
     elif tr_key is None and request.method == "POST":
         # create a new transfusion
         is_new = True
-
+        tr_code = onlynumbers(request.json.get('code', '0'))
+        if int(tr_code) == 0:
+            logging.error("Cannot create TR from %r: %r" % (request.json, 'no transfusion code'))
+            return make_response(jsonify(code="Bad Request"), 400, {})
         patient_key = None
         patient_key_url_safe = request.json.get('patient_key', None)
         patient_record_code = request.json.get('record', None)
@@ -145,7 +147,7 @@ def create_or_update():
             logging.error("Cannot create TR from %r: %r" % (request.json, 'no patient key'))
             return make_response(jsonify(code="Bad Request"), 400, {})
 
-        tr = Transfusion()
+        tr = Transfusion(id=tr_code)
     else:
         logging.error("Cannot create TR from %r: %r (%r)" % (request.json, 'incorrect method', request.method))
         return make_response(jsonify(code="Bad Request"), 400, {})
@@ -166,16 +168,14 @@ def create_or_update():
 
     logs.append(LogEntry.from_user(UserPrefs.get_current(), is_new))
     try:
-
         tr.populate(patient=patient_key,
-                    code=tr_code,
                     date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
                     local=transfusion_local,
                     bags=bags,
                     logs=logs,
                     tags=tags,
                     text=text)
-        key = tr.put()
+        key = tr.put(update=not is_new)
     except BadValueError as e:
         logging.error("Cannot create TR from %r: %r" % (request.json, e))
         return make_response(jsonify(code="Bad Request"), 400, {})
