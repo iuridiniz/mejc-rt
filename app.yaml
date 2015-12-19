@@ -5,11 +5,14 @@ api_version: 1
 threadsafe: true
 
 handlers:
-- url: /static
-  static_dir: static
+- url: /(index(.*\.(html|htm))?)?$
+  static_files: static/index.html
+  upload: static/index.html
 - url: /authtest
   script: authtest.app
   secure: always
-- url: /.*
+- url: /api/.*
   script: mejcrt.app
   secure: always
+- url: /
+  static_dir: static/
