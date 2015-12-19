@@ -32,12 +32,52 @@ import logging
 from flask.globals import request
 from flask.helpers import make_response
 from flask.json import jsonify
+from google.appengine.api import users
 from google.appengine.ext.db import BadValueError
 
 from ..app import app
 from ..models import UserPrefs
 from .decorators import require_login
 
+
+@app.route("/api/v1/user/<who>", methods=['GET'],
+           endpoint="user.get")
+@require_login()
+def get(who):
+    cur = UserPrefs.get_current()
+
+    if who == 'me':
+        u = cur
+    else:
+        u = UserPrefs.get_by_userid(who)
+
+    if u is None:
+        return make_response(jsonify(code="Not found"), 404, {})
+
+    # XXX: any logged user can get info about any user
+    # if u.userid != cur.userid and not cur.admin:
+    #    logging.error("User %r cannot get info about user %r" % (cur, u))
+    #    return make_response(jsonify(code="Forbidden"), 403, {})
+
+    return make_response(jsonify(code="OK", data=dict(user=u.to_dict())))
+
+@app.route("/api/v1/user/login/google", methods=['GET'],
+           endpoint='user.login.google')
+def login_google():
+    continue_ = request.args.get('continue')
+    if not continue_:
+        return make_response(jsonify(code="Bad request"), 400, {})
+    url = users.create_login_url(continue_)
+    return make_response(jsonify({'code':"OK", 'continue':url}), 200, {})
+
+@app.route("/api/v1/user/logout/google", methods=['GET'],
+           endpoint='user.logout.google')
+def logout_google():
+    continue_ = request.args.get('continue')
+    if not continue_:
+        return make_response(jsonify(code="Bad request"), 400, {})
+    url = users.create_logout_url(continue_)
+    return make_response(jsonify({'code':"OK", 'continue':url}), 200, {})
 
 @app.route("/api/v1/user", methods=['PUT'],
            endpoint="user.update")

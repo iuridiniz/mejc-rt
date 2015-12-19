@@ -374,6 +374,37 @@ class TestTransfusion(TestBase):
         self.assertListEqual(rv.json['data']['contents'], list(models.blood_contents))
 
 class TestUser(TestBase):
+    def testGetMeLogged(self):
+        self.fixtureCreateSomeData()
+
+        from .. import models
+        u = models.UserPrefs.query(models.UserPrefs.admin == False).get()
+        self.login(email=u.email, id_=u.userid)
+
+        rv = self.client.get(url_for('user.get', who='me'))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(data['user'], u.to_dict())
+
+    def testGetMeNotLogged(self):
+        self.fixtureCreateSomeData()
+
+        rv = self.client.get(url_for('user.get', who='me'))
+        self.assert401(rv)
+
+#     def testLoginGoogle(self):
+#         self.fixtureCreateSomeData()
+#         rv = self.client.get(url_for('user.login.google', **{'continue': 'http://localhost:8080/'}))
+#         self.assert200(rv)
+#         self.assertIsNotNone(rv.json.get('url'))
+#
+#     def testLogoutGoogle(self):
+#         self.fixtureCreateSomeData()
+#
+#         rv = self.client.get(url_for('user.logout.google', **{'continue': 'http://localhost:8080/'}))
+#         self.assert200(rv)
+#         self.assertIsNotNone(rv.json.get('url'))
+
     def testUpdateUserNotLoggedAsAdmin(self):
         self.fixtureCreateSomeData()
 
