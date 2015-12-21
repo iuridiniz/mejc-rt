@@ -8,6 +8,7 @@ handlers:
 - url: /(index(.*\.(html|htm))?)?$
   static_files: static/index.html
   upload: static/index.html
+  secure: always
 - url: /authtest
   script: authtest.app
   secure: always
@@ -16,3 +17,4 @@ handlers:
   secure: always
 - url: /
   static_dir: static/
+  secure: always
