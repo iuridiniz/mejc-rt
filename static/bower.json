@@ -24,6 +24,9 @@
     "bootstrap3-typeahead": "~4.0.0",
     "AdminLTE": "admin-lte#~2.3.2",
     "jquery": "~2.1.4",
-    "Ionicons": "ionicons#~2.0.1"
+    "Ionicons": "ionicons#~2.0.1",
+    "PACE": "pace#~1.0.2",
+    "iCheck": "icheck#~1.0.2",
+    "jquery-numerator": "~0.2.1"
   }
 }
