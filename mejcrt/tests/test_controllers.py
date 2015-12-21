@@ -101,6 +101,15 @@ class TestPatient(TestBase):
         data = rv.json['data']
         self.assertEquals(key, data['key'])
 
+    def testStats(self):
+        self.login()
+        from ..models import Patient
+        c = Patient.query().count()
+        rv = self.client.get(url_for('patient.stats'))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(c, data['stats']['all'])
+
     def testHistoryCreateGetUpdateGet(self):
         self.login()
 
@@ -193,6 +202,15 @@ class TestTransfusion(TestBase):
         from .. import models
         self.data['patient'] = dict(
                 key=models.Patient.query().get(keys_only=True).urlsafe())
+
+    def testStats(self):
+        self.login()
+        from ..models import Transfusion
+        c = Transfusion.query().count()
+        rv = self.client.get(url_for('transfusion.stats'))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(c, data['stats']['all'])
 
     def testCreate(self):
         self.login()

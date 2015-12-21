@@ -42,10 +42,17 @@ from ..app import app
 from ..models import Patient, LogEntry
 from .decorators import require_login
 
-
 def parse_fields(f):
     "transform to lowercase, remove any spaces and split on ','"
     return (''.join(f.lower().split())).split(',')
+
+@app.route("/api/v1/patient/stats", methods=['GET'], endpoint="patient.stats")
+@require_login()
+def stats():
+    stats = {}
+    stats['all'] = Patient.count()
+    return make_response(
+         jsonify(code="OK", data={'stats': stats}), 200, {})
 
 @app.route("/api/v1/patient", methods=['POST', 'PUT'], endpoint="patient.upinsert")
 @require_login()

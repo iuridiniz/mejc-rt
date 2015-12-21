@@ -22,11 +22,11 @@
 # SOFTWARE.
 import datetime
 
-from google.appengine.api import users
+from google.appengine.api import users, memcache
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 
-from .util import onlynumbers, iconv, tokenize
+from .util import iconv, tokenize
 
 # Models
 blood_types = ('O-',
@@ -172,6 +172,7 @@ class Patient(Model):
     __dict_exclude__ = ['name_tags', 'code_tags', 'object_version', 'added_at',
                         'updated_at']
 
+    COUNT_KEY = 'Patient.count'
 
     object_version = ndb.IntegerProperty(default=1, required=True)
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
@@ -187,19 +188,40 @@ class Patient(Model):
     name_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_name(self.name), repeated=True)
     code_tags = ndb.ComputedProperty(lambda self: self._gen_tokens_for_code(self.code), repeated=True)
 
+    _cache = memcache.Client()
+
     def _gen_tokens_for_name(self, name):
         return list(tokenize(iconv(name.lower()), minimum=4, maximum=16))
     def _gen_tokens_for_code(self, code):
         return list(tokenize(iconv(code.lower())))
 
-    @ndb.transactional
     def put(self, update=False, **ctx_options):
-        if self.get_by_code(self.code):
-            if not update:
-                raise BadValueError("Code %r is duplicated" % self.code)
-        elif update:
-            raise BadValueError("Code %r does not exist" % self.code)
-        return super(Patient, self).put(**ctx_options)
+        @ndb.transactional
+        def put():
+            if self.get_by_code(self.code):
+                if not update:
+                    raise BadValueError("Code %r is duplicated" % self.code)
+            elif update:
+                raise BadValueError("Code %r does not exist" % self.code)
+            return super(Patient, self).put(**ctx_options)
+        key = put()
+        if not update:
+            self._count_incr()
+        return key
+
+    @classmethod
+    def count(cls, *args):
+        c = cls._cache.get(cls.COUNT_KEY)
+        if c is None:
+            c = cls.query().count()
+            cls._cache.set(key=cls.COUNT_KEY, value=c, time=3600)
+        return c
+
+    @classmethod
+    def _count_incr(cls, *args):
+        # It does nothing if KEY doesn't exists
+        cls._cache.incr(cls.COUNT_KEY)
+        return cls.count()
 
     @classmethod
     def get_by_code(cls, *args, **kwargs):
@@ -225,24 +247,76 @@ class Transfusion(Model):
         choices=valid_locals)
     bags = ndb.LocalStructuredProperty(BloodBag, repeated=True)
 
-    tags = ndb.StringProperty(repeated=True, indexed=False,
+    tags = ndb.StringProperty(repeated=True, indexed=True,
         choices=transfusion_tags)
     text = ndb.TextProperty(required=False)
     logs = ndb.StructuredProperty(LogEntry, repeated=True)
 
-    @ndb.transactional(xg=True)
-    def put(self, update=False, **ctx_options):
-        if self.patient.get() is None:
-            raise BadValueError("Patient %r does not exist" % self.patient)
+    _cache = memcache.Client()
 
-        if self.get_by_code(self.code):
-            if not update:
-                raise BadValueError("Code %r is duplicated" % self.code)
-        elif update:
-            raise BadValueError("Code %r does not exist" % self.code)
-        return super(Transfusion, self).put(**ctx_options)
+    @classmethod
+    def _get_cache_key(cls, tag):
+        return "%s.tag.%s" % (cls.__class__.__name__, tag)
+
+    def put(self, update=False, **ctx_options):
+        @ndb.transactional(xg=True)
+        def put():
+
+            if self.patient.get() is None:
+                raise BadValueError("Patient %r does not exist" % self.patient)
+
+            old = self.get_by_code(self.code)
+            old_tags = []
+            if old:
+                old_tags = list(self.tags)
+                if not update:
+                    raise BadValueError("Code %r is duplicated" % self.code)
+            elif update:
+                raise BadValueError("Code %r does not exist" % self.code)
+
+            return super(Transfusion, self).put(**ctx_options), old_tags
+
+        r, old_tags = put()
+        self._update_count_tags(old_tags)
+
+        if not update:
+            tag = 'all'
+            self._cache.incr(self._get_cache_key(tag))
+            self.count(tag)
+
+        return r
 
     @classmethod
     def get_by_code(cls, *args, **kwargs):
         result = cls.get_by_id(*args, **kwargs)
         return result
+
+    @classmethod
+    def count(cls, tag=None):
+        if tag is None:
+            tag = 'all'
+            query = cls.query()
+        elif tag in transfusion_tags:
+            query = cls.query(cls.tags == tag)
+        else:
+            return None
+
+        key = cls._get_cache_key(tag)
+        c = cls._cache.get(key)
+        if c is None:
+            c = query.count()
+            cls._cache.set(key=key, value=c, time=3600)
+        return c
+
+    def _update_count_tags(self, old_tags):
+        old = set(list(old_tags))
+        cur = set(list(self.tags))
+        for tag in cur - old:
+            # tag was added
+            self._cache.incr(self._get_cache_key(tag))
+            self.count(tag)
+        for tag in old - cur:
+            # tag was removed
+            self._cache.decr(self._get_cache_key(tag))
+            self.count(tag)
+

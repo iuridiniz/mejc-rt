@@ -45,6 +45,20 @@ from ..models import Transfusion, Patient, BloodBag, LogEntry
 from ..util import iconv
 from .decorators import require_login
 
+@app.route("/api/v1/transfusion/stats", methods=['GET'], endpoint="transfusion.stats")
+@require_login()
+def stats():
+    tags = []
+    tags_str = request.args.get("tags", None)
+    if tags_str:
+        tags = tags_str.strip().lower().split(',')
+    stats = {}
+    for tag in tags:
+        stats[tag] = Transfusion.count(tag)
+    stats['all'] = Transfusion.count()
+    return make_response(
+         jsonify(code="OK", data=dict(stats=stats)), 200, {})
+
 @app.route("/api/v1/transfusion/search", methods=['GET'], endpoint="transfusion.search")
 @require_login()
 def search():
