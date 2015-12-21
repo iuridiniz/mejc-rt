@@ -13,8 +13,8 @@
   <section class="content">
     <div class="alert alert-warning alert-dismissible" role="alert" ng-show="ctrl.forbidden">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>Não autorizado!</strong>
-        <p>Parece que você não tem permissão para a requisição solicitada, peça autorização a um administrador.</p>
+        <strong>Sem permissão!</strong>
+        <p>Parece que você não tem permissão para a requisição solicitada ou está bloqueado, peça autorização a um administrador, ou tente com <a ng-href="{{main.google_logout_url}}">outra conta</a></p>
     </div>
     <div class="login-box">
       <div class="login-logo">
