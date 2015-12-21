@@ -24,7 +24,18 @@
             templateUrl : "templates/blank.html",
         });
     });
+    app.config(function($routeProvider) {
+        $routeProvider.when("/404", {
+            templateUrl : "templates/404.html",
+        });
+    });
+    app.config(function($routeProvider) {
+        $routeProvider.otherwise({
+            redirectTo: "/404",
+        });
+    });
     app.config(function($locationProvider) {
         $locationProvider.html5Mode(false);
     });
+    
 })();
