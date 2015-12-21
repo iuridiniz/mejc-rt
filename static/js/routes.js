@@ -19,6 +19,11 @@
             controller : "LoginController as ctrl"
         });
     });
+    app.config(function($routeProvider) {
+        $routeProvider.when("/blank", {
+            templateUrl : "templates/blank.html",
+        });
+    });
     app.config(function($locationProvider) {
         $locationProvider.html5Mode(false);
     });
