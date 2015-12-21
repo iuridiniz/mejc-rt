@@ -10,9 +10,6 @@
             console.log(response.data.data.user);
             main.user = response.data.data.user;
             main.user.since = new Date(main.user.added_at);
-            if ($location.path() == "/" || $location.path() == "") {
-                $location.path("/dashboard");
-            }
         }, function(err) {
             main.need_login = true;
             if (err.status == 401 || err.status == 403 ) {
