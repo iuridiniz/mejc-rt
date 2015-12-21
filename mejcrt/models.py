@@ -116,7 +116,7 @@ class Model(ndb.Model):
         return self._parse_data(ret)
 
 class UserPrefs(Model):
-    __dict_include__ = ['userid', 'name', 'email', 'admin']
+    __dict_include__ = ['userid', 'name', 'email', 'admin', 'added_at']
 
     object_version = ndb.IntegerProperty(default=1, required=True)
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
