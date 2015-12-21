@@ -1,0 +1,38 @@
+<div>
+  <section class="content-header">
+    <h1>
+      Login <small>Entrar no sistema</small>
+    </h1>
+    <ol class="breadcrumb">
+      <li><a><i class="fa fa-sign-in"></i>Casa</a></li>
+      <li class="active">Login</li>
+    </ol>
+  </section>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="alert alert-warning alert-dismissible" role="alert" ng-show="ctrl.forbidden">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <strong>Não autorizado!</strong>
+        <p>Parece que você não tem permissão para a requisição solicitada, peça autorização a um administrador.</p>
+    </div>
+    <div class="login-box">
+      <div class="login-logo">
+        <a><b>MEJC</b><small>RT</small></a>
+      </div>
+      <!-- /.login-logo -->
+      <div class="login-box-body">
+        <p class="login-box-msg">Entre no sistema para iniciar sua utilização</p>
+        <div class="social-auth-links text-center">
+          <a ng-href="{{main.google_login_url}}" class="btn btn-block btn-social btn-google btn-flat"><i class="fa fa-google"></i> Usar conta do google </a>
+        </div>
+
+        <!-- /.social-auth-links -->
+      </div>
+      <!-- /.login-box-body -->
+    </div>
+    <!-- /.login-box -->
+  </section>
+  <!-- /.content -->
+</div>
+

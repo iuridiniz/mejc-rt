@@ -1,0 +1,78 @@
+<div ><!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>
+      Visão geral
+      <small>Visão geral</small>
+    </h1>
+    <ol class="breadcrumb">
+      <li><a><i class="fa fa-dashboard"></i>Casa</a></li>
+      <li class="active">Visão geral</li>
+    </ol>
+  </section>
+  
+  <!-- Main content -->
+  <section class="content">
+    <div class="box row">
+        <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-aqua"><i class="ion ion-person-stalker"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Pacientes</span>
+              <span class="info-box-number" id="qtd-patients">0</span>
+              <a class="btn btn-xs btn-success"><i class="fa ion-person-add"> </i> <span class="hidden-xs"> Novo </span></span></a>
+              <a class="btn btn-xs hidden-xs btn-default"><i class="fa ion-search"> </i> Localizar </a>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+        </div>
+        <!-- /.col -->
+        <div class="col-md-6 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-red"><i class="fa ion-waterdrop fa-invert"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Transfusões</span>
+              <span class="info-box-number" id="qtd-transfusions"></span>
+              <a class="btn btn-xs btn-success">
+                <i class="fa ion-android-add-circle"> </i> 
+                <span class="hidden-xs"> Nova </span></span>
+              </a>
+              <a class="btn btn-xs hidden-xs btn-default"><i class="fa ion-search"> </i> Localizar </a>
+            </div>
+            
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+        </div>
+        <!-- /.col -->
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="info-box bg-red">
+            <span class="info-box-icon bg-gray" style="">
+                <span class="fa-stack text-red">
+                    <i class="fa ion-waterdrop fa-stack-1x"></i> 
+                    <i class="fa fa-ban fa-stack-2x" style="opacity: 0.8;"> </i>
+                </span>
+            </span>
+            <div class="info-box-content">
+              <span class="info-box-text">Reações transfusionais</span>
+              <span class="info-box-number" id="qtd-reactions"></span>
+              <!-- The progress section is optional -->
+              <div class="progress">
+                <div class="progress-bar" style="width: 0%" id="percent-no-reactions-bar"></div>
+              </div>
+              <span class="progress-description">
+                <span ng-show="ctrl.stats.transfusions.rt > 0"><span id="percent-no-reactions"></span>% sem reação desde o início.</span>
+              </span>
+            </div><!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+        </div>
+        <!-- /.col -->
+        <div class="overlay" ng-show="ctrl.loading">
+            <i class="fa fa-refresh fa-spin"></i>
+        </div>
+    </div>
+  </section>
+  <!-- /.content -->
+</div>

@@ -1,0 +1,20 @@
+<aside class="main-sidebar">
+  <!-- sidebar: style can be found in sidebar.less -->
+  <section class="sidebar">
+    <!-- Sidebar Menu -->
+    <ul class="sidebar-menu" ng-show="main.user">
+      <li class="header">Tarefas</li>
+      <!-- Optionally, you can add icons to the links -->
+      <li><a href="#/dashboard"><i class="fa fa-dashboard"></i> <span>Visão Geral</span></a></li>
+      <li><a><i class="fa ion-person-stalker"></i> <span>Pacientes</span></a></li>
+      <li><a><i class="fa ion-waterdrop"></i> <span>Transfusões</span></a></li>
+    </ul>
+    <ul class="sidebar-menu" ng-show="main.need_login">
+      <li class="header">Tarefas</li>
+      <!-- Optionally, you can add icons to the links -->
+      <li><a href="#/login"><i class="fa fa-sign-in"></i> <span>Entrar no sistema</span></a></li>
+    </ul>
+    <!-- /.sidebar-menu -->
+  </section>
+  <!-- /.sidebar -->
+</aside>
