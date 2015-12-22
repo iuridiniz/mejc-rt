@@ -26,11 +26,14 @@
             controller : "PatientListController as ctrl"
         });
     });
+    
+    /* OTHERS PAGES */
     app.config(function($routeProvider) {
         $routeProvider.when("/blank", {
             templateUrl : "templates/blank.html",
         });
     });
+
     app.config(function($routeProvider) {
         $routeProvider.when("/404", {
             templateUrl : "templates/404.html",

@@ -7,7 +7,7 @@
         main.google_logout_url = null;
         
         $http.get("/api/v1/user/me").then(function(response) {
-            console.log(response.data.data.user);
+            //console.log(response.data.data.user);
             main.user = response.data.data.user;
             main.user.since = new Date(main.user.added_at);
         }, function(err) {
