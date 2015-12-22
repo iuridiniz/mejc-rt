@@ -114,10 +114,28 @@ def search(query):
     return make_response(jsonify(data=[p.to_dict() for p in objs],
                                  code='OK'), 200, {})
 
+def _get_multi():
+    max_ = int(request.args.get("max", '20'))
+    # order_ = request.args.get('order')
+    if max_ > 50:
+        max_ = 50
+    if max_ < 0:
+        max = 0
 
+    objs = []
+    if max_:
+        objs = Patient.build_query().fetch(limit=max_)
+    return make_response(jsonify(data=[p.to_dict() for p in objs],
+                                 code='OK'), 200, {})
+
+
+@app.route("/api/v1/patient/", methods=["GET"], endpoint="patient.get")
 @app.route("/api/v1/patient/<key>", methods=["GET"], endpoint="patient.get")
 @require_login()
-def get(key):
+def get(key=None):
+    if key is None:
+        return _get_multi()
+
     key = ndb.Key(urlsafe=key)
 
     p = key.get()

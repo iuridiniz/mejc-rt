@@ -92,7 +92,7 @@ class TestPatient(TestBase):
                               content_type='application/json')
         self.assert400(rv)
 
-    def testGet(self):
+    def testGetKey(self):
         self.login()
         from ..models import Patient
         key = Patient.query().get(keys_only=True).urlsafe()
@@ -100,6 +100,16 @@ class TestPatient(TestBase):
         self.assert200(rv)
         data = rv.json['data']
         self.assertEquals(key, data['key'])
+
+    def testGetListMax(self):
+        self.login()
+        from ..models import Patient
+        n = Patient.query().count()
+        query = dict({'max': n / 2})
+        rv = self.client.get(url_for('patient.get', **query))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(len(data), query['max'])
 
     def testStats(self):
         self.login()
