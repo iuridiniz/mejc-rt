@@ -104,12 +104,13 @@ def search(query):
         max_ = 40
     if max < 1:
         return make_response(jsonify(code="OK", data=[]), 200, {})
-    filters = []
+    name = None
+    code = None
     if "name" in fields:
-        filters.append(Patient.name_tags == iconv(query).strip().lower())
+        name = query
     if "code" in fields:
-        filters.append(Patient.code_tags == query)
-    objs = Patient.query(ndb.OR(*filters)).fetch(max_)
+        code = query
+    objs = Patient.build_query(name, code).fetch(max_)
     return make_response(jsonify(data=[p.to_dict() for p in objs],
                                  code='OK'), 200, {})
 

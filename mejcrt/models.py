@@ -228,6 +228,19 @@ class Patient(Model):
         result = cls.get_by_id(*args, **kwargs)
         return result
 
+    @classmethod
+    def build_query(cls, name=None, code=None):
+        filters = []
+        if not name is None:
+            filters.append(cls.name_tags == iconv(name).strip().lower())
+        if not code is None:
+            filters.append(cls.code_tags == code)
+
+        if filters:
+            return cls.query(ndb.OR(*filters))
+
+        return cls.query()
+
 class BloodBag(Model):
     type_ = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
     content = ndb.StringProperty()
