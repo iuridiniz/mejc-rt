@@ -117,7 +117,8 @@ def search(query):
 def _get_multi():
     max_ = int(request.args.get("max", '20'))
     offset = int(request.args.get('offset', '0'))
-
+    q = request.args.get('q', None)
+    fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'name'))])
     if offset < 0:
         offset = 0
 
@@ -129,14 +130,16 @@ def _get_multi():
     total = Patient.count()
 
     objs = []
+    count = 0
     if max_:
-        objs = Patient.build_query().fetch(limit=max_, offset=offset)
-    count = len(objs)
+        query = Patient.build_query(name=fields.get('name'), code=fields.get('code'))
+        count = query.count()
+        objs = query.fetch(limit=max_, offset=offset)
 
     query_next = {'max': max_, 'offset': max_ + offset}
-
-    if count < max_:
-        query_next['offset'] = count + offset
+    length = len(objs)
+    if length < max_:
+        query_next['offset'] = length + offset
 
     query_prev = {'max': max_, 'offset': offset - max_}
     if offset - max_ < 0:

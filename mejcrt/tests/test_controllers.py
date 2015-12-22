@@ -101,12 +101,25 @@ class TestPatient(TestBase):
         data = rv.json['data']
         self.assertEquals(key, data['key'])
 
+    def testGetListQuery(self):
+        from ..models import Patient
+        self.login()
+        p = Patient.query().get()
+
+        query = dict({'q': p.code, 'fields': 'code'})
+        rv = self.client.get(url_for('patient.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals(len(data), 1)
+        self.assertEquals(p.key.urlsafe(), data[0]['key'])
+
     def testGetListMax(self):
         self.login()
         from ..models import Patient
         n = Patient.query().count()
         query = dict({'max': n / 2})
-
         rv = self.client.get(url_for('patient.get', **query))
         self.assert200(rv)
         data = rv.json['data']
