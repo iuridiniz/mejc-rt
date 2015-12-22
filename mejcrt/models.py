@@ -178,10 +178,10 @@ class Patient(Model):
     added_at = ndb.DateTimeProperty(auto_now_add=True, indexed=False)
     updated_at = ndb.DateTimeProperty(auto_now=True, indexed=False)
 
-    name = ndb.StringProperty(indexed=False, required=True)
+    name = ndb.StringProperty(indexed=True, required=True)
     code = ndb.ComputedProperty(lambda self: self.key.id())
-    blood_type = ndb.StringProperty(indexed=False, required=True, choices=blood_types)
-    type_ = ndb.StringProperty(indexed=False, required=True,
+    blood_type = ndb.StringProperty(indexed=True, required=True, choices=blood_types)
+    type_ = ndb.StringProperty(indexed=True, required=True,
         choices=patient_types)
     logs = ndb.StructuredProperty(LogEntry, repeated=True)
 
