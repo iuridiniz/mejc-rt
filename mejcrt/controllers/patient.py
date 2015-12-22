@@ -28,7 +28,7 @@ Created on 10/12/2015
 
 import logging
 
-from flask import request, json
+from flask import request
 from flask.helpers import make_response, url_for
 from flask.json import jsonify
 from google.appengine.api.datastore_errors import BadValueError
@@ -36,7 +36,6 @@ from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
 from mejcrt.models import UserPrefs, patient_types
-from mejcrt.util import iconv
 
 from ..app import app
 from ..models import Patient, LogEntry
@@ -90,29 +89,6 @@ def create_or_update():
         return make_response(jsonify(code="Bad Request"), 400, {})
 
     return make_response(jsonify(code="OK", data=dict(key=key.urlsafe())), 200, {})
-
-@app.route("/api/v1/patient/search/<query>", methods=["GET"],
-           endpoint="patient.search")
-@require_login()
-def search(query):
-    if not hasattr(request, 'args'):
-        return make_response(jsonify(code="Bad Request"), 400, {})
-    fields = parse_fields(request.args.get('fields', 'name'))
-    max_ = int(request.args.get('max', '20'))
-
-    if max_ > 40:
-        max_ = 40
-    if max < 1:
-        return make_response(jsonify(code="OK", data=[]), 200, {})
-    name = None
-    code = None
-    if "name" in fields:
-        name = query
-    if "code" in fields:
-        code = query
-    objs = Patient.build_query(name, code).fetch(max_)
-    return make_response(jsonify(data=[p.to_dict() for p in objs],
-                                 code='OK'), 200, {})
 
 def _get_multi():
     max_ = int(request.args.get("max", '20'))
@@ -172,153 +148,6 @@ def get(key=None):
         return make_response(jsonify(code="Not Found"), 404, {})
 
     return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
-
-
-@app.route("/api/v1/patient/list/columns", methods=["GET"], endpoint="patient.list_columns")
-@require_login()
-def list_columns():
-    # TODO: use gettext
-    defs = [
-        {
-            "data": "key",
-            "title": "Chave",
-            "visible": False,
-            'searchable': False,
-            'orderable': False,
-        },
-        {
-            "data": "name",
-            "title": "Nome",
-            "visible": True,
-            'searchable': True,
-            'orderable': True
-        },
-        {
-            "data": "code",
-            "title": u"Prontu\xe1rio",
-            "visible": True,
-            'searchable': True,
-            'orderable': True
-        },
-        {
-            "data": "blood_type",
-            "title": u"Tipo sangu\xedneo",
-            "visible": True,
-            'searchable': False,
-            'orderable': False
-        },
-        {
-            "data": "type",
-            "title": u"Tipo de paciente",
-            "visible": True,
-            'searchable': False,
-            'orderable': False
-        },
-    ]
-    return make_response(json.dumps(defs), 200, {'content-type': "application/json"})
-
-# TODO: remove this code or build a test
-@app.route("/api/v1/patient/list", methods=["POST"], endpoint="patient.list")
-@require_login()
-def list_():
-
-    # Validate
-    if request.json is None:
-        logging.error("Missing json on %r" % (request))
-        return make_response(jsonify(code="Bad Request"), 400, {})
-
-    required = ["columns", "draw", "start", "search", "length", "order"]
-    if not all([c in request.json for c in required]):
-        logging.error("Invalid JSON data in %r:%r" % (request.json,
-                  [(c, c in request.json) for c in required]))
-        return make_response(jsonify(code="Bad Request"), 400, {})
-
-    # logging.info(request.json)
-    fields = [c.get('data') for c in request.json['columns']]
-    if not all(fields):
-        logging.error("Missing 'data' on some columns of %r:%r" % (request.json,
-                  [(c, c.get('data')) for c in request.json['columns']]))
-        return make_response(jsonify(code="Bad Request"), 400, {})
-
-    search = request.json['search'].get('value')
-    if type(search) != unicode:
-        logging.error("Invalid 'search' %r of %r" % (request.json['search'], request.json))
-        return make_response(jsonify(code="Bad Request"), 400, {})
-
-    start = request.json['start']
-    if type(start) != int:
-        logging.error("Invalid 'start' %r of %r" % (request.json['start'], request.json))
-        return make_response(jsonify(code="Bad Request"), 400, {})
-
-    length = request.json['length']
-    if type(length) != int:
-        logging.error("Invalid 'length' %r of %r" % (request.json['length'], request.json))
-        return make_response(jsonify(code="Bad Request"), 400, {})
-
-    order = request.json['order']
-    orders = []
-    for ord_ in order[:1]:  # only the first order
-        column_index = ord_.get('column', -1)
-        column_dir = ord_.get('dir', "")
-        if (type(column_index) != int or
-            column_index < 0 or
-            column_index >= len(fields) or
-            column_dir not in ("asc", 'desc')):
-                logging.error("Invalid 'order' %r of %r" % (ord_, request.json))
-                return make_response(jsonify(code="Bad Request"), 400, {})
-
-
-        field = fields[column_index]
-        if field in ('code', 'name'):
-            if column_dir == 'desc':
-                orders.append(-getattr(Patient, field))
-            else:
-                orders.append(getattr(Patient, field))
-
-    draw = request.json['draw']
-
-    filters = []
-
-    if search:
-        for field in fields:
-            if field == "code":
-                filters.append(Patient.code_tags == iconv(search).strip().lower())
-            if field == "name":
-                filters.append(Patient.name_tags == iconv(search).strip().lower())
-
-    query = Patient.query()
-    records_total = Patient.count()
-    records_filtered = Patient.count()
-    if filters:
-        query = query.filter(ndb.OR(*filters))
-        records_filtered = query.count()
-    if orders:
-        logging.info("%r" % orders)
-        query = query.order(*orders)
-    objs = query.fetch(limit=length,
-                                      offset=start)
-
-    data = []
-    for o in objs:
-        e = {}
-        for f in fields:
-            if f in ("name", "code", "blood_type"):
-                e[f] = getattr(o, f)
-                continue
-            if f == "type":
-                e[f] = o.type_
-                continue
-            if f == "key":
-                e[f] = o.key.urlsafe()
-                continue
-
-        data.append(e)
-    ret = dict(draw=draw,
-               recordsTotal=records_total,
-               recordsFiltered=records_filtered,
-               data=data)
-
-    return make_response(jsonify(ret), 200, {})
 
 @app.route("/api/v1/patient/types",
            methods=["GET"],
