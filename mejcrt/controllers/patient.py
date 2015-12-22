@@ -116,15 +116,19 @@ def search(query):
 
 def _get_multi():
     max_ = int(request.args.get("max", '20'))
-    # order_ = request.args.get('order')
+    offset = int(request.args.get('offset', '0'))
+
+    if offset < 0:
+        offset = 0
+
     if max_ > 50:
         max_ = 50
     if max_ < 0:
-        max = 0
+        max_ = 0
 
     objs = []
     if max_:
-        objs = Patient.build_query().fetch(limit=max_)
+        objs = Patient.build_query().fetch(limit=max_, offset=offset)
     return make_response(jsonify(data=[p.to_dict() for p in objs],
                                  code='OK'), 200, {})
 

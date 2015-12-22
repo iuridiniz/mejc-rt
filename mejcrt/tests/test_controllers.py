@@ -111,6 +111,17 @@ class TestPatient(TestBase):
         data = rv.json['data']
         self.assertEquals(len(data), query['max'])
 
+    def testGetListOffset(self):
+        self.login()
+        from ..models import Patient
+        n = Patient.query().count()
+        # last two
+        query = dict({'offset': n - 2})
+        rv = self.client.get(url_for('patient.get', **query))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(len(data), 2)
+
     def testStats(self):
         self.login()
         from ..models import Patient
