@@ -19,6 +19,13 @@
             controller : "LoginController as ctrl"
         });
     });
+    /* Patient pages */
+    app.config(function($routeProvider) {
+        $routeProvider.when("/patient", {
+            templateUrl : "templates/patient/list.html",
+            controller : "PatientListController as ctrl"
+        });
+    });
     app.config(function($routeProvider) {
         $routeProvider.when("/blank", {
             templateUrl : "templates/blank.html",
