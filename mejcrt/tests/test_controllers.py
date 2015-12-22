@@ -106,6 +106,7 @@ class TestPatient(TestBase):
         from ..models import Patient
         n = Patient.query().count()
         query = dict({'max': n / 2})
+
         rv = self.client.get(url_for('patient.get', **query))
         self.assert200(rv)
         data = rv.json['data']
@@ -121,6 +122,49 @@ class TestPatient(TestBase):
         self.assert200(rv)
         data = rv.json['data']
         self.assertEquals(len(data), 2)
+
+    def testGetListPaginatorNext(self):
+        self.login()
+        from ..models import Patient
+        n = Patient.query().count()
+        keys = [];
+        url = url_for('patient.get', **{'offset': 0, 'max': 2})
+        for _ in range(n):
+            rv = self.client.get(url)
+            self.assert200(rv)
+            data = rv.json['data']
+            self.assertLessEqual(len(data), 2)
+            url = rv.json['next']
+            for o in data:
+                keys.append(o['key'])
+
+        expected_keys = [k.urlsafe() for k in Patient.query().fetch(keys_only=True)]
+        self.assertEquals(keys, expected_keys)
+
+    def _interatePaginatorPrev(self, start, max_, count):
+        codes = [];
+        url = url_for('patient.get', **{'offset': start, 'max': max_})
+        for _ in range(count + 1):
+            # print url
+            rv = self.client.get(url)
+            self.assert200(rv)
+            data = rv.json['data']
+            self.assertLessEqual(len(data), max_)
+            url = rv.json['prev']
+            for o in data:
+                codes.append(o['code'])
+
+        return codes
+
+    def testGetListPaginatorPrevMulti(self):
+        self.login()
+        from ..models import Patient
+        count = Patient.query().count()
+        expected_codes = sorted([p.code for p in Patient.query().fetch()])
+        for n in range(1, count):
+            # print "**** %d " % n
+            got_codes = sorted(self._interatePaginatorPrev(count, n, count))
+            self.assertEquals(got_codes, expected_codes)
 
     def testStats(self):
         self.login()

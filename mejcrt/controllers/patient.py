@@ -29,7 +29,7 @@ Created on 10/12/2015
 import logging
 
 from flask import request, json
-from flask.helpers import make_response
+from flask.helpers import make_response, url_for
 from flask.json import jsonify
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
@@ -126,11 +126,33 @@ def _get_multi():
     if max_ < 0:
         max_ = 0
 
+    total = Patient.count()
+
     objs = []
     if max_:
         objs = Patient.build_query().fetch(limit=max_, offset=offset)
+    count = len(objs)
+
+    query_next = {'max': max_, 'offset': max_ + offset}
+
+    if count < max_:
+        query_next['offset'] = count + offset
+
+    query_prev = {'max': max_, 'offset': offset - max_}
+    if offset - max_ < 0:
+        query_prev['offset'] = 0
+        query_prev['max'] = offset
+
+    next_ = url_for("patient.get", **query_next)
+    prev = url_for("patient.get", **query_prev)
+
     return make_response(jsonify(data=[p.to_dict() for p in objs],
-                                 code='OK'), 200, {})
+                                 code='OK',
+                                 total=total,
+                                 next=next_,
+                                 prev=prev,
+                                 count=count),
+                         200, {})
 
 
 @app.route("/api/v1/patient/", methods=["GET"], endpoint="patient.get")
