@@ -170,7 +170,7 @@ def list_columns():
     ]
     return make_response(json.dumps(defs), 200, {'content-type': "application/json"})
 
-
+# TODO: remove this code or build a test
 @app.route("/api/v1/patient/list", methods=["POST"], endpoint="patient.list")
 @require_login()
 def list_():
