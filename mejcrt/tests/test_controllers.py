@@ -110,6 +110,11 @@ class TestPatient(TestBase):
         data = rv.json['data']
         self.assertEquals(key, data['key'])
 
+    def testGetKeyInvalid(self):
+        self.login()
+        rv = self.client.get(url_for('patient.get', key='a'))
+        self.assert404(rv)
+
     def testGetListQuery(self):
         from ..models import Patient
         self.login()

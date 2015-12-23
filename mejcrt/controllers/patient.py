@@ -153,7 +153,11 @@ def get(key=None):
     if key is None:
         return _get_multi()
 
-    key = ndb.Key(urlsafe=key)
+    try:
+        key = ndb.Key(urlsafe=key)
+    except TypeError as e:
+        logging.error("Error while decoding key %r: %r" % (key, e))
+        return make_response(jsonify(code="Not Found"), 404, {})
 
     p = key.get()
     if p is None:
