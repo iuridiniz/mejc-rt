@@ -1,0 +1,12 @@
+<div class="modal-header">
+  <button ng-disabled="modal.loading" type="button" class="close" ng-click="cancel()" aria-label="Close">
+    <span aria-hidden="true">×</span></button>
+  <h4 class="modal-title">Apagar {{ modal.patient.name }} ?</h4>
+</div>
+<div class="modal-body">
+  <p>Tem certeza que deseja apagar <b>{{ modal.patient.name }}</b></p>
+</div>
+<div class="modal-footer">
+  <button ng-disabled="modal.loading" type="button" class="btn btn-outline pull-left" ng-click="modal.cancel()">Não</button>
+  <button ng-disabled="modal.loading" type="button" class="btn btn-outline" ng-click="modal.confirm()">Sim</button>
+</div>

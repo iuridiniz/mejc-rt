@@ -2,7 +2,7 @@
     app.controller("PatientEditController", ['$http', '$timeout', '$scope', '$location', '$routeParams', '$httpParamSerializer', "$q",
     function($http, $timeout, $scope, $location, $routeParams, $httpParamSerializer, $q) {
         var ctrl = this;
-        console.log($routeParams);
+        //console.log($routeParams);
         if ($scope.main.need_login == true) {
             $location.path("/login");
             return;

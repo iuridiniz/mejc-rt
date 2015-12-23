@@ -1,7 +1,6 @@
 (function() {
-
-    app.controller("PatientListController", ['$http', '$location', '$scope', '$httpParamSerializer',
-    function($http, $location, $scope, $httpParamSerializer) {
+    app.controller("PatientListController", ['$route', '$timeout', '$http', '$location', '$scope', '$httpParamSerializer', "$uibModal",
+    function($route, $timeout, $http, $location, $scope, $httpParamSerializer, $uibModal) {
         //({fields:fields})
         var ctrl = this;
         //console.log("PatientListController");
@@ -54,6 +53,32 @@
         ctrl.edit = function(key) {
             $location.path("/patient/" + key + "/edit");
         };
+        ctrl.deleteConfirm = function(p) {
+            var modalInstance = $uibModal.open({
+                animation: true,
+                templateUrl: 'templates/patient/delete.html',
+                controller: 'PatientDeleteController as modal',
+                windowClass: 'modal-danger',
+                resolve: {
+                    patient: function() {
+                        return p;
+                    }
+                }
+            });
+            modalInstance.result.then(function (ret) {
+                console.log(arguments);
+                //console.log('Modal confirm (patient' + patient + "') at " + new Date());
+                if (! ret.success) {
+                    $scope.main.showError("Não pude apagar '" + ret.patient.name + "'", "Erro");
+                    return;
+                }
+                $scope.main.showSuccess("Paciente '" + ret.patient.name + "' apagado", "Sucesso");
+                $route.reload();
+            }, function () {
+                //console.log('Modal dismissed at ' + new Date());
+            });
+        };
+        
         ctrl.goToNext = function() {
             if (ctrl.next_link) {
                 ctrl.requestPatients(ctrl.next_link);
@@ -82,7 +107,7 @@
             }
         };
         ctrl.clearSearchClick = function() {
-            console.log("clearSearchClick");
+            //console.log("clearSearchClick");
             ctrl.filter = "";
             ctrl.offset = 0;
             ctrl.requestPatients(ctrl.buildUrl());
@@ -93,7 +118,6 @@
             ctrl.requestPatients(ctrl.buildUrl());
         };
         ctrl.requestPatients(ctrl.buildUrl());
-        
     }]);
 })();
 
