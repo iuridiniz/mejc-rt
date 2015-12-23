@@ -14,10 +14,18 @@
         ctrl.blood_types = [];
         
         ctrl.reset = function() {
-            ctrl.data = {}
+            //console.log("reset", arguments);
+            ctrl.data = {};
+            if (ctrl.blood_types.length) {
+                ctrl.data.blood_type = ctrl.blood_types[0];
+            }
+            if (ctrl.patient_types.length) {
+                ctrl.data.type = ctrl.patient_types[0];
+            }
         };
-        ctrl.create = function() {
-            if($scope.form.$invalid) {
+        ctrl.create = function(patient, form) {
+            //console.log("reset", arguments);
+            if(form.$invalid) {
                 return;
             }
             $http.get("/api/v1/patient/code/" + ctrl.data.code).then(function(success) {
@@ -31,7 +39,7 @@
                     });
                     return;
                 } 
-                $scope.main.showError("Paciente não pode ser cadastrado", "Erro");
+                $scope.main.showError("Paciente não pode ser cadastrado. contate o administrador", "Erro");
             });
         };
         var promisses = {};
@@ -42,19 +50,14 @@
             angular.forEach(types, function(t) {
                 ctrl.blood_types.push(t);
             });
-            if (types.length) {
-                ctrl.data.blood_type = types[0];
-            }
+            ctrl.reset();
         });
         promisses['patient_types'] = $http.get("/api/v1/patient/types").then(function(response) {
             var types = response.data.data.types;
             angular.forEach(types, function(t) {
                 ctrl.patient_types.push(t);
-                
             });
-            if (types.length) {
-                ctrl.data.type = types[0];
-            }
+            ctrl.reset();
         });
 
         $q.all(promisses).then(function(result) {

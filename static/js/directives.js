@@ -68,5 +68,19 @@
             replace: true,
             templateUrl: "templates/message_box.html"
         }
-    })
+    });
+    app.directive("patientForm", function() {
+        return {
+            restrict: 'E',
+            scope: {
+                patient: '=patient',
+                reset: '&onReset',
+                submit: '&onSubmit',
+                patient_types: "=patientTypes",
+                blood_types: "=bloodTypes"
+            },
+            replace: false,
+            templateUrl: "templates/patient/form.html"
+        };
+    });
 })();
