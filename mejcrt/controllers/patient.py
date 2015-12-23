@@ -161,6 +161,15 @@ def get(key=None):
 
     return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
 
+@app.route("/api/v1/patient/code/<code>", methods=["GET"], endpoint="patient.get_by_code")
+@require_login()
+def get_by_code(code):
+    p = Patient.get_by_code(code)
+    if p is None:
+        return make_response(jsonify(code="Not Found"), 404, {})
+
+    return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
+
 @app.route("/api/v1/patient/types",
            methods=["GET"],
            endpoint="patient.types")

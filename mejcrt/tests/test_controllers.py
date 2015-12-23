@@ -92,6 +92,15 @@ class TestPatient(TestBase):
                               content_type='application/json')
         self.assert400(rv)
 
+    def testGetCode(self):
+        self.login()
+        from ..models import Patient
+        p = Patient.query().get()
+        rv = self.client.get(url_for('patient.get_by_code', code=p.code))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(p.key.urlsafe(), data['key'])
+
     def testGetKey(self):
         self.login()
         from ..models import Patient
