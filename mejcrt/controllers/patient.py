@@ -132,6 +132,7 @@ def _get_multi():
                                  prev=prev,
                                  offset=offset,
                                  max=max_,
+                                 filter=q,
                                  count=count),
                          200, {})
 
