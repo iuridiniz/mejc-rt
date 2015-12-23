@@ -1,0 +1,45 @@
+<div>
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>
+      Pacientes <small>Modificar</small>
+    </h1>
+    <ol class="breadcrumb">
+      <li><a href="#/">MEJC<small>RT</small></a></li>
+      <li><a href="#/patient"><i class="fa ion-person-stalker"></i>
+          Pacientes </a></li>
+      <li class="active"><i class="fa fa-pencil"></i> Modificar</li>
+    </ol>
+  </section>
+
+  <!-- Main content -->
+  <section class="content">
+    <message-box></message-box>
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="box box-info">
+          <div class="box-header with-border">
+            <h3 class="box-title">{{ctrl.patient_data.name}}</h3>
+          </div>
+          <!-- /.box-header -->
+          <!-- form start -->
+          <div class="box-body">
+            <patient-form patient="ctrl.patient_data" 
+                patient-types="ctrl.patient_types"
+                blood-types="ctrl.blood_types"
+                disable="['code']"
+                reset="null"
+                submit-text="Salvar"
+                on-submit="ctrl.save(patient, form)"></patient-form>
+          </div>
+          <!-- /.box-body -->
+          <div class="overlay" ng-show="ctrl.loading">
+            <i class="fa fa-refresh fa-spin"></i>
+          </div>
+        </div>
+        <!-- /.box -->
+      </div>
+    </div>
+  </section>
+  <!-- /.content -->
+</div>

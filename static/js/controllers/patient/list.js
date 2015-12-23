@@ -1,7 +1,7 @@
 (function() {
 
-    app.controller("PatientListController", ['$http', '$scope', '$httpParamSerializer',
-    function($http, $scope, $httpParamSerializer) {
+    app.controller("PatientListController", ['$http', '$location', '$scope', '$httpParamSerializer',
+    function($http, $location, $scope, $httpParamSerializer) {
         //({fields:fields})
         var ctrl = this;
         //console.log("PatientListController");
@@ -51,6 +51,9 @@
             });
         };
         
+        ctrl.edit = function(key) {
+            $location.path("/patient/" + key + "/edit");
+        };
         ctrl.goToNext = function() {
             if (ctrl.next_link) {
                 ctrl.requestPatients(ctrl.next_link);

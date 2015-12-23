@@ -32,6 +32,12 @@
             controller : "PatientNewController as ctrl"
         });
     });
+    app.config(function($routeProvider) {
+        $routeProvider.when("/patient/:key/edit", {
+            templateUrl : "templates/patient/edit.html",
+            controller : "PatientEditController as ctrl"
+        });
+    });
     /* OTHERS PAGES */
     app.config(function($routeProvider) {
         $routeProvider.when("/blank", {
