@@ -74,10 +74,12 @@
             restrict: 'E',
             scope: {
                 patient: '=patient',
-                reset: '&onReset',
+                reset: '&?onReset',
                 submit: '&onSubmit',
+                submit_text: "@submitText",
                 patient_types: "=patientTypes",
-                blood_types: "=bloodTypes"
+                blood_types: "=bloodTypes",
+                disable: "=disable" /* TODO: today code only disables code input */
             },
             replace: false,
             templateUrl: "templates/patient/form.html"

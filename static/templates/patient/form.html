@@ -4,7 +4,7 @@
     <label for="name" class="col-sm-2 control-label">Nome</label>
     <div class="col-sm-10">
       <input ng-model="patient.name" type="text"
-        class="form-control" id="name" ng-model-options="{ updateOn: 'default blur', debounce: { default: 500, blur: 0 } }"
+        class="form-control" id="name"
         placeholder="RN/Maria Joaquina do Amaral" required>
       <span
         class="glyphicon glyphicon-user form-control-feedback"></span>
@@ -15,7 +15,7 @@
     <div class="col-sm-10">
       <input ng-model="patient.code" type="number"
         class="form-control" id="code" placeholder="24001" min="1"
-        required>
+        required ng-disabled="disable.indexOf('code') >= 0">
     </div>
   </div>
   
@@ -39,7 +39,7 @@
     </div>
   </div>
   <div>
-    <button type="submit" class="btn btn-success pull-right" ng-click="submit({patient:patient, form:form})">Criar</button>
-    <button type="button" class="btn btn-default pull-left" ng-click="reset()">Limpar</button>
+    <button type="submit" class="btn btn-success pull-right" ng-click="submit({patient:patient, form:form})">{{submit_text}}</button>
+    <button ng-hide="{{reset === undefined}}" type="button" class="btn btn-default pull-left" ng-click="reset()">Limpar</button></span>
   </div>
 </form>
