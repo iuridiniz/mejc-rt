@@ -9,6 +9,7 @@
             $location.path("/login");
             return;
         }
+        $scope.main.page = 'dashboard';
 
         ctrl.updateStats = function () {
             //console.log("update", ctrl.stats);

@@ -6,6 +6,7 @@
             $location.path("/").search({});
             return;
         }
+        $scope.main.page = 'login';
         ctrl.forbidden = false;
         $http.get("/api/v1/user/me").then(function(response) {
             /* already logged */

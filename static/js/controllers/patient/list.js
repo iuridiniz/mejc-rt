@@ -9,7 +9,8 @@
             $location.path("/login");
             return;
         }
-        
+        $scope.main.page = 'patient';
+
         ctrl.loading = true;
 
         ctrl.patients = [];
