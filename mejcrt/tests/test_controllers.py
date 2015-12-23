@@ -193,6 +193,21 @@ class TestPatient(TestBase):
             got_codes = sorted(self._interatePaginatorPrev(count, n, count))
             self.assertEquals(got_codes, expected_codes)
 
+    def testDeleteNotAdmin(self):
+        self.login()
+        from ..models import Patient
+        p = Patient.query().get()
+        rv = self.client.delete(url_for('patient.delete', key=p.key.urlsafe()))
+        self.assert403(rv)
+
+    def testDeleteAdmin(self):
+        self.login(is_admin=True)
+        from ..models import Patient
+        p = Patient.query().get()
+        rv = self.client.delete(url_for('patient.delete', key=p.key.urlsafe()))
+        self.assert200(rv)
+
+
     def testStats(self):
         self.login()
         from ..models import Patient
@@ -202,8 +217,8 @@ class TestPatient(TestBase):
         data = rv.json['data']
         self.assertEquals(c, data['stats']['all'])
 
-    def testHistoryCreateGetUpdateGet(self):
-        self.login()
+    def testHistoryCreateGetUpdateGetDeleteGet(self):
+        self.login(is_admin=True)
 
         data = self.patient_data.copy()
 
@@ -243,6 +258,15 @@ class TestPatient(TestBase):
         self.assertEquals(got_data['logs'][1]['action'], 'update')
         del got_data['logs']
         self.assertEquals(data, got_data)
+
+        # key = got_data['key']
+        # delete
+        rv = self.client.delete(url_for('patient.delete', key=key))
+        self.assert200(rv)
+
+        # get not found
+        rv = self.client.get(url_for('patient.get', key=key))
+        self.assert404(rv)
 
     def testGetPatientTypes(self):
         self.login()

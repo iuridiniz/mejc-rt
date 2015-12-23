@@ -35,11 +35,13 @@ from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
+from mejcrt.controllers.decorators import require_admin
 from mejcrt.models import UserPrefs, patient_types
 
 from ..app import app
 from ..models import Patient, LogEntry
 from .decorators import require_login
+
 
 def parse_fields(f):
     "transform to lowercase, remove any spaces and split on ','"
@@ -164,6 +166,23 @@ def get(key=None):
         return make_response(jsonify(code="Not Found"), 404, {})
 
     return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
+
+@app.route("/api/v1/patient/<key>", methods=["DELETE"], endpoint="patient.delete")
+@require_admin()
+def delete(key):
+    try:
+        key = ndb.Key(urlsafe=key)
+    except TypeError as e:
+        logging.error("Error while decoding key %r: %r" % (key, e))
+        return make_response(jsonify(code="Not Found"), 404, {})
+
+    p = key.get()
+    if p and isinstance(p, Patient):
+        p.key.delete()
+        return make_response(jsonify(data={}, code='OK'), 200, {})
+
+    return make_response(jsonify(code="Not Found"), 404, {})
+
 
 @app.route("/api/v1/patient/code/<code>", methods=["GET"], endpoint="patient.get_by_code")
 @require_login()
