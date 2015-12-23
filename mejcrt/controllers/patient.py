@@ -112,12 +112,18 @@ def _get_multi():
         count = query.count()
         objs = query.fetch(limit=max_, offset=offset)
 
-    query_next = {'max': max_, 'offset': max_ + offset}
+    query_next = {'max': max_,
+                  'offset': max_ + offset,
+                  'q': q,
+                  'fields':','.join(fields.keys())}
     length = len(objs)
     if length < max_:
         query_next['offset'] = length + offset
 
-    query_prev = {'max': max_, 'offset': offset - max_}
+    query_prev = {'max': max_,
+                  'offset': offset - max_,
+                  'q': q,
+                  'fields':','.join(fields.keys())}
     if offset - max_ < 0:
         query_prev['offset'] = 0
         query_prev['max'] = offset
