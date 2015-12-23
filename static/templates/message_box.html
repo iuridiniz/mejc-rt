@@ -1,0 +1,20 @@
+<div ng-show="main.message" class="box" 
+    ng-class="[main.message.class, {'box-solid': main.message.title }]">
+  <div class="box-header with-border" ng-show="main.message.title">
+    <h3 class="box-title">{{ main.message.title }}</h3>
+    <div class="box-tools pull-right">
+      <button type="button" ng-click="main.message=null" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+    </div>
+    <!-- /.box-tools -->
+  </div>
+  <!-- /.box-header -->
+  <div class="box-body">
+    <div class="box-tools pull-right" ng-hide="main.message.title">
+      <button type="button" ng-click="main.message=null" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+    </div>
+    <div>
+        {{ main.message.content }}
+    </div>
+  </div>
+  <!-- /.box-body -->
+</div>

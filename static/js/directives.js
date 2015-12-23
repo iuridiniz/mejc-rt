@@ -62,4 +62,11 @@
             templateUrl: "templates/main_footer.html"
         };
     });
+    app.directive("messageBox", function() {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: "templates/message_box.html"
+        }
+    })
 })();
