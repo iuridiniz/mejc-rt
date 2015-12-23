@@ -45,7 +45,7 @@
                 ctrl.page = Math.floor(data.offset / data.max) + 1;
                 ctrl.total = data.total;
                 ctrl.count = data.count;
-                ctrl.applied_filter = data.filter;
+                ctrl.applied_filter = data.q;
                 ctrl.loading = false;
             });
         };

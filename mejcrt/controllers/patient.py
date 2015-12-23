@@ -47,6 +47,52 @@ def parse_fields(f):
     "transform to lowercase, remove any spaces and split on ','"
     return (''.join(f.lower().split())).split(',')
 
+def make_response_list_paginator(max_, offset, dbquery, total, endpoint, **extra):
+    if offset < 0:
+        offset = 0
+
+    if max_ > 50:
+        max_ = 50
+    if max_ < 0:
+        max_ = 0
+
+    objs = []
+    count = 0
+    if max_:
+        count = dbquery.count()
+        objs = dbquery.fetch(limit=max_, offset=offset)
+
+    query_next = extra.copy()
+    query_next.update({'max': max_,
+                       'offset': max_ + offset})
+    length = len(objs)
+    if length < max_:
+        query_next['offset'] = length + offset
+
+    query_prev = extra.copy()
+    query_prev.update({'max': max_,
+                       'offset': offset - max_, })
+
+    if offset - max_ < 0:
+        query_prev['offset'] = 0
+        query_prev['max'] = offset
+
+    next_ = url_for(endpoint, **query_next)
+    prev = url_for(endpoint, **query_prev)
+
+
+    ret = extra.copy()
+    ret.update(dict(data=[p.to_dict() for p in objs],
+                    code='OK',
+                    total=total,
+                    next=next_,
+                    prev=prev,
+                    offset=offset,
+                    max=max_,
+                    count=count))
+
+    return make_response(jsonify(ret), 200, {})
+
 @app.route("/api/v1/patient/stats", methods=['GET'], endpoint="patient.stats")
 @require_login()
 def stats():
@@ -100,53 +146,18 @@ def _get_multi():
     offset = int(request.args.get('offset', '0'))
     q = request.args.get('q', '') or None
     fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'name'))])
-    if offset < 0:
-        offset = 0
-
-    if max_ > 50:
-        max_ = 50
-    if max_ < 0:
-        max_ = 0
 
     total = Patient.count()
+    query = Patient.build_query(name=fields.get('name'), code=fields.get('code'))
+    endpoint = "patient.get"
 
-    objs = []
-    count = 0
-    if max_:
-        query = Patient.build_query(name=fields.get('name'), code=fields.get('code'))
-        count = query.count()
-        objs = query.fetch(limit=max_, offset=offset)
-
-    query_next = {'max': max_,
-                  'offset': max_ + offset,
-                  'q': q,
-                  'fields':','.join(fields.keys())}
-    length = len(objs)
-    if length < max_:
-        query_next['offset'] = length + offset
-
-    query_prev = {'max': max_,
-                  'offset': offset - max_,
-                  'q': q,
-                  'fields':','.join(fields.keys())}
-    if offset - max_ < 0:
-        query_prev['offset'] = 0
-        query_prev['max'] = offset
-
-    next_ = url_for("patient.get", **query_next)
-    prev = url_for("patient.get", **query_prev)
-
-    return make_response(jsonify(data=[p.to_dict() for p in objs],
-                                 code='OK',
-                                 total=total,
-                                 next=next_,
-                                 prev=prev,
-                                 offset=offset,
-                                 max=max_,
-                                 filter=q,
-                                 count=count),
-                         200, {})
-
+    return make_response_list_paginator(max_=max_,
+                                        offset=offset,
+                                        q=q,
+                                        fields=','.join(fields.keys()),
+                                        dbquery=query,
+                                        total=total,
+                                        endpoint=endpoint)
 
 @app.route("/api/v1/patient/", methods=["GET"], endpoint="patient.get")
 @app.route("/api/v1/patient/<key>", methods=["GET"], endpoint="patient.get")
@@ -183,7 +194,6 @@ def delete(key):
         return make_response(jsonify(data={}, code='OK'), 200, {})
 
     return make_response(jsonify(code="Not Found"), 404, {})
-
 
 @app.route("/api/v1/patient/code/<code>", methods=["GET"], endpoint="patient.get_by_code")
 @require_login()

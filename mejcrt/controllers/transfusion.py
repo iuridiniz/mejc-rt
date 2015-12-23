@@ -31,12 +31,14 @@ from datetime import datetime
 import logging
 
 from flask import request
-from flask.helpers import make_response
+from flask.helpers import make_response, url_for
 from flask.json import jsonify
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
+from mejcrt.controllers.patient import parse_fields, \
+    make_response_list_paginator
 from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs
 from mejcrt.util import onlynumbers
 
@@ -44,6 +46,7 @@ from ..app import app
 from ..models import Transfusion, Patient, BloodBag, LogEntry
 from ..util import iconv
 from .decorators import require_login
+
 
 @app.route("/api/v1/transfusion/stats", methods=['GET'], endpoint="transfusion.stats")
 @require_login()
@@ -95,23 +98,41 @@ def search():
            endpoint="transfusion.get")
 @require_login()
 def get(key=None):
-    if key is not None:
-        key = ndb.Key(urlsafe=key)
-        tr = key.get()
-        if tr is None or not isinstance(tr, Transfusion):
-            return make_response(jsonify(code="Not Found"), 404, {})
+    if key is None:
+        return _get_multi()
+    key = ndb.Key(urlsafe=key)
+    tr = key.get()
+    if tr is None or not isinstance(tr, Transfusion):
+        return make_response(jsonify(code="Not Found"), 404, {})
 
-        return make_response(jsonify(data=[tr.to_dict()], code='OK'), 200, {})
+    return make_response(jsonify(data=[tr.to_dict()], code='OK'), 200, {})
 
-    max_ = int(request.args.get('max', '0'))
-    if max_ > 40:
-        max_ = 40
-    if max_ > 0:
-        objs = Transfusion.query().order(-Transfusion.date).fetch(max_)
-        if objs:
-            return make_response(jsonify(data=[tr.to_dict() for tr in objs], code='OK'), 200, {})
+def _get_multi():
+    # get_multi
+    max_ = int(request.args.get("max", '20'))
+    offset = int(request.args.get('offset', '0'))
+    q = request.args.get('q', '') or None
+    fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'name'))])
+    if offset < 0:
+        offset = 0
 
-    return make_response(jsonify(code="Not Found"), 404, {})
+    if max_ > 50:
+        max_ = 50
+    if max_ < 0:
+        max_ = 0
+
+    total = Transfusion.count()
+    endpoint = "transfusion.get"
+
+    # query = Transfusion.build_query(exact='true', name=fields.get('name'), code=fields.get('code'))
+    query = Transfusion.query()
+    return make_response_list_paginator(max_=max_,
+                                        offset=offset,
+                                        q=q,
+                                        fields=','.join(fields.keys()),
+                                        dbquery=query,
+                                        total=total,
+                                        endpoint=endpoint)
 
 @app.route("/api/v1/transfusion", methods=['POST', 'PUT'],
            endpoint="transfusion.upinsert")
