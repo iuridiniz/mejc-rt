@@ -191,9 +191,16 @@ class Patient(Model):
     _cache = memcache.Client()
 
     def _gen_tokens_for_name(self, name):
-        return list(tokenize(iconv(name.lower()), minimum=4, maximum=16))
+        name = iconv(name.lower())
+        tokens = tokenize(name, minimum=4, maximum=16)
+        tokens.add(name)
+        return list(tokens)
+
     def _gen_tokens_for_code(self, code):
-        return list(tokenize(iconv(code.lower())))
+        code = iconv(code.lower())
+        tokens = tokenize(code, minimum=4, maximum=16)
+        tokens.add(code)
+        return list(tokens)
 
     def put(self, update=False, **ctx_options):
         @ndb.transactional
