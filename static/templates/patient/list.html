@@ -17,16 +17,18 @@
         <div class="box">
           <div class="box-header">
             <h3 class="box-title">Pacientes</h3>
-
-            <div class="box-tools">
-              
-              <div class="input-group input-group-sm" style="width: 200px;">
+            <div class="box-tools" style="width: 65%">
+              <div class="input-group input-group-sm" >
                 <div class="input-group-btn">
-                  <button type="submit" class="btn btn-success btn-xs"><i class="fa ion-person-add"></i><span class="hidden-xs"> Novo </span></button>
+                  <button type="submit" class="btn btn-success btn-sm"><i class="fa ion-person-add"></i><span class="hidden-xs"> Novo </span></button>
                 </div>
-                <input type="text" name="table_search" class="form-control pull-right" placeholder="Localizar">
-                <div class="input-group-btn hidden-xs">
-                  <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-search"></i></button>
+                <input type="text" name="table_search" class="form-control pull-right" placeholder="Localizar" ng-keyup="ctrl.searchKeyUp($event)" ng-model="ctrl.filter">
+                <div class="input-group-btn" ng-show="ctrl.applied_filter">
+                  <button type="submit" class="btn btn-default btn-sm" ng-click="ctrl.clearSearchClick()"><i class="fa fa-times-circle"></i></button>
+                </div>
+                
+                <div class="input-group-btn">
+                  <button type="submit" class="btn btn-default btn-sm" ng-click="ctrl.searchClick()"><i class="fa fa-search"></i></button>
                 </div>
               </div>
             </div>
@@ -37,6 +39,7 @@
               <thead>
                 <tr>
                   <th>#</th>
+                  <th>Prontuário</th>
                   <th>Nome</th>
                   <th class="hidden-xs">Tipo</th>
                   <th class="hidden-xs">Sangue</th>
@@ -45,22 +48,47 @@
               </thead>
               <tbody>
                 <tr ng-repeat="p in ctrl.patients" data-key="{{p.key}}">
+                    <td> {{ $index+1+ctrl.offset }} </td>
                     <td> {{ p.code }} </td>
-                    <td> {{ p.name }} </td>
+                    <td> {{ p.name | cut:true:30}} </td>
                     <td class="hidden-xs"> {{ p.type }} </td>
                     <td class="hidden-xs"> {{ p.blood_type }} </td>
-                    <td></td>
+                    <td>
+                      <button ng-click="ctrl.edit(p.key)" type="button"
+                        class="btn btn-info btn-xs">
+                        <i class="fa fa-pencil"></i> <span class="hidden-xs">
+                          Modificar </span>
+                      </button>
+                      <button ng-click="ctrl.apagar(p.key)" type="button"
+                        class="btn btn-danger btn-xs">
+                        <i class="fa fa-trash"></i> <span class="hidden-xs">
+                          Apagar </span>
+                      </button>
+                    </td>
                 </tr>
               </tbody>
             </table>
           </div>
           <!-- /.box-body -->
           <div class="box-footer clearfix">
+              <span class="pull-left" ng-hide="ctrl.loading">
+                <span ng-hide="ctrl.applied_filter"> 
+                    Total de pacientes: {{ctrl.total}} 
+                </span>
+                <span ng-show="ctrl.applied_filter"> 
+                    Pacientes com filtro 
+                    <strong>{{ctrl.applied_filter}}</strong>: 
+                    {{ctrl.count}}
+                </span>
+              </span>
               <ul class="pagination pagination-sm no-margin pull-right">
                 <li><a ng-click="ctrl.goToPrev()">&lt;</a></li>
                 <li><a>{{ctrl.page}}</a></li>
                 <li><a ng-click="ctrl.goToNext()">&gt;</a></li>
               </ul>
+          </div>
+          <div class="overlay" ng-show="ctrl.loading">
+            <i class="fa fa-refresh fa-spin"></i>
           </div>
         </div>
         <!-- /.box -->
