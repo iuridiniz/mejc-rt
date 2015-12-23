@@ -202,6 +202,10 @@ class Patient(Model):
         tokens.add(code)
         return list(tokens)
 
+    def delete(self):
+        self.key.delete()
+        self._count_decr()
+
     def put(self, update=False, **ctx_options):
         @ndb.transactional
         def put():
@@ -217,7 +221,7 @@ class Patient(Model):
         return key
 
     @classmethod
-    def count(cls, *args):
+    def count(cls):
         c = cls._cache.get(cls.COUNT_KEY)
         if c is None:
             c = cls.query().count()
@@ -225,9 +229,15 @@ class Patient(Model):
         return c
 
     @classmethod
-    def _count_incr(cls, *args):
+    def _count_incr(cls):
         # It does nothing if KEY doesn't exists
         cls._cache.incr(cls.COUNT_KEY)
+        return cls.count()
+
+    @classmethod
+    def _count_decr(cls):
+        # It does nothing if KEY doesn't exists
+        cls._cache.decr(cls.COUNT_KEY)
         return cls.count()
 
     @classmethod

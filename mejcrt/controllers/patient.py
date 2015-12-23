@@ -177,8 +177,9 @@ def delete(key):
         return make_response(jsonify(code="Not Found"), 404, {})
 
     p = key.get()
+    logging.info(p)
     if p and isinstance(p, Patient):
-        p.key.delete()
+        p.delete()
         return make_response(jsonify(data={}, code='OK'), 200, {})
 
     return make_response(jsonify(code="Not Found"), 404, {})
