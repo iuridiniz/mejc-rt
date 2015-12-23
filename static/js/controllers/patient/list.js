@@ -19,7 +19,7 @@
         ctrl.applied_filter = null;
         ctrl.fields = "name,code";
         ctrl.offset = 0;
-        ctrl.max = 20;
+        ctrl.max = 10;
         
         ctrl.total = 0;
         ctrl.count = 0;

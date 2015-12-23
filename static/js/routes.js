@@ -26,7 +26,12 @@
             controller : "PatientListController as ctrl"
         });
     });
-    
+    app.config(function($routeProvider) {
+        $routeProvider.when("/patient/new", {
+            templateUrl : "templates/patient/new.html",
+            controller : "PatientNewController as ctrl"
+        });
+    });
     /* OTHERS PAGES */
     app.config(function($routeProvider) {
         $routeProvider.when("/blank", {
