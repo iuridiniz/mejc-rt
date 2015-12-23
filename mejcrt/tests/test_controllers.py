@@ -212,7 +212,7 @@ class TestPatient(TestBase):
 
         # update
         data['name'] = "Hello World"
-        rv = self.client.post(url_for('patient.upinsert'),
+        rv = self.client.put(url_for('patient.upinsert'),
                               data=json.dumps(data),
                               content_type='application/json')
         self.assert200(rv)

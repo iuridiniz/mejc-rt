@@ -63,16 +63,19 @@ def create_or_update():
     code = request.json.get('code', None)
     patient = None
     is_new = False
-    if patient_key:
+    if patient_key and request.method == "PUT":
         try:
             key = ndb.Key(urlsafe=patient_key)
             patient = key.get()
             code = patient.code
         except ProtocolBufferDecodeError:
             pass
-    else:
+    elif patient_key is None and request.method == "POST":
         is_new = True
-        patient = Patient(id=code)
+        patient = Patient(id=str(code))
+    else:
+        logging.error("Invalid request %r for json %r" % (request.method, request.json))
+        return make_response(jsonify(code="Bad Request"), 400, {})
 
     logs = patient.logs or []
     logs.append(LogEntry.from_user(UserPrefs.get_current(), is_new))
