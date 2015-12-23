@@ -93,7 +93,7 @@ def create_or_update():
 def _get_multi():
     max_ = int(request.args.get("max", '20'))
     offset = int(request.args.get('offset', '0'))
-    q = request.args.get('q', None)
+    q = request.args.get('q', '') or None
     fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'name'))])
     if offset < 0:
         offset = 0
@@ -130,6 +130,8 @@ def _get_multi():
                                  total=total,
                                  next=next_,
                                  prev=prev,
+                                 offset=offset,
+                                 max=max_,
                                  count=count),
                          200, {})
 
