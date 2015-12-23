@@ -12,15 +12,60 @@
 
   <!-- Main content -->
   <section class="content">
-  <div class="box">
-      <div class="box-header">
-        <h3 class="box-title">Data Table With Full Features</h3>
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">Pacientes</h3>
+
+            <div class="box-tools">
+              
+              <div class="input-group input-group-sm" style="width: 200px;">
+                <div class="input-group-btn">
+                  <button type="submit" class="btn btn-success btn-xs"><i class="fa ion-person-add"></i><span class="hidden-xs"> Novo </span></button>
+                </div>
+                <input type="text" name="table_search" class="form-control pull-right" placeholder="Localizar">
+                <div class="input-group-btn hidden-xs">
+                  <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-search"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /.box-header -->
+          <div class="box-body no-padding">
+            <table class="table table-condensed table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nome</th>
+                  <th class="hidden-xs">Tipo</th>
+                  <th class="hidden-xs">Sangue</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="p in ctrl.patients" data-key="{{p.key}}">
+                    <td> {{ p.code }} </td>
+                    <td> {{ p.name }} </td>
+                    <td class="hidden-xs"> {{ p.type }} </td>
+                    <td class="hidden-xs"> {{ p.blood_type }} </td>
+                    <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- /.box-body -->
+          <div class="box-footer clearfix">
+              <ul class="pagination pagination-sm no-margin pull-right">
+                <li><a ng-click="ctrl.goToPrev()">&lt;</a></li>
+                <li><a>{{ctrl.page}}</a></li>
+                <li><a ng-click="ctrl.goToNext()">&gt;</a></li>
+              </ul>
+          </div>
+        </div>
+        <!-- /.box -->
       </div>
-      <!-- /.box-header -->
-  <div class="box-body">
-    <table datatable="" dt-options="ctrl.dtOptions" dt-columns="ctrl.dtColumns" class="table table-striped table-bordered">
-    </table>
-  </div>
+    </div>
   </section>
   <!-- /.content -->
 </div>
