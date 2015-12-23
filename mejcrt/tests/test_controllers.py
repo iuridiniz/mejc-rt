@@ -346,7 +346,7 @@ class TestTransfusion(TestBase):
         self.assertEquals(len(got_data), 1)
         self.assertEquals(key.urlsafe(), got_data[0]['key'])
 
-    def testGetLast10(self):
+    def testGetList10(self):
         self.login()
         query = dict(max=10)
         rv = self.client.get(url_for('transfusion.get', **query))
