@@ -126,7 +126,7 @@ class UserPrefs(Model):
     name = ndb.StringProperty(required=True, indexed=False)
     email = ndb.StringProperty(required=True, indexed=False)
     admin = ndb.BooleanProperty(required=True, indexed=True)
-    authorized = ndb.BooleanProperty(indexed=True, required=True)
+    authorized = ndb.BooleanProperty(required=True, indexed=True)
 
     @classmethod
     def get_current(cls):
@@ -154,6 +154,19 @@ class UserPrefs(Model):
     @classmethod
     def get_by_userid(cls, *args):
         return cls.get_by_id(*args)
+
+    @classmethod
+    def build_query(cls, admin=None, authorized=None):
+        filters = []
+        if admin is not None:
+            filters.append(cls.admin == admin)
+        if authorized is not None:
+            filters.append(cls.authorized == authorized)
+
+        if filters:
+            return cls.query(ndb.OR(*filters))
+
+        return cls.query()
 
 class LogEntry(Model):
     user = ndb.KeyProperty(UserPrefs, required=True, indexed=True)

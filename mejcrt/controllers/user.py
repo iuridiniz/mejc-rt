@@ -35,15 +35,42 @@ from flask.json import jsonify
 from google.appengine.api import users
 from google.appengine.ext.db import BadValueError
 
+from mejcrt.controllers.patient import parse_fields, \
+    make_response_list_paginator, str2bool
+
 from ..app import app
 from ..models import UserPrefs
 from .decorators import require_login
 
+def _get_multi():
+    max_ = int(request.args.get("max", '20'))
+    offset = int(request.args.get('offset', '0'))
+    q = request.args.get('q', '') or None
+    fields = dict([(f, q) for f in parse_fields(request.args.get('fields', ''))])
 
+    total = UserPrefs.build_query().count()
+    admin = str2bool(fields.get('admin', None))
+    authorized = str2bool(fields.get('admin', None))
+
+    query = UserPrefs.build_query(admin=admin, authorized=authorized)
+    endpoint = "user.get"
+
+    return make_response_list_paginator(max_=max_,
+                                        offset=offset,
+                                        q=q,
+                                        fields=','.join(fields.keys()),
+                                        dbquery=query,
+                                        total=total,
+                                        endpoint=endpoint)
+
+@app.route("/api/v1/user", methods=['GET'],
+           endpoint="user.get")
 @app.route("/api/v1/user/<who>", methods=['GET'],
            endpoint="user.get")
 @require_login()
-def get(who):
+def get(who=None):
+    if who is None:
+        return _get_multi()
     cur = UserPrefs.get_current()
 
     if who == 'me':

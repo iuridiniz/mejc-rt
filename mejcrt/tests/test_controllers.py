@@ -570,6 +570,18 @@ class TestUser(TestBase):
         rv = self.client.get(url_for('user.get', who='me'))
         self.assert401(rv)
 
+    def testGetList(self):
+        self.fixtureCreateSomeData()
+
+        self.login()
+        from ..models import UserPrefs
+        n = UserPrefs.query().count()
+        query = dict({})
+        rv = self.client.get(url_for('user.get', **query))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(len(data), n)
+
 #     def testLoginGoogle(self):
 #         self.fixtureCreateSomeData()
 #         rv = self.client.get(url_for('user.login.google', **{'continue': 'http://localhost:8080/'}))
