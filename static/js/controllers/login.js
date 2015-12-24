@@ -16,7 +16,5 @@
                 ctrl.forbidden = true;
             }
         });
-        
-
     }]);
 })();
