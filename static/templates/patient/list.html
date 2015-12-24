@@ -84,9 +84,9 @@
                 </span>
               </span>
               <ul class="pagination pagination-sm no-margin pull-right">
-                <li><a ng-click="ctrl.goToPrev()">&lt;</a></li>
-                <li><a>{{ctrl.page}}</a></li>
-                <li><a ng-click="ctrl.goToNext()">&gt;</a></li>
+                <li ng-show="ctrl.prev_link"><a href="" ng-click="ctrl.goToPrev()">&lt;</a></li>
+                <li ng-show="ctrl.prev_link || ctrl.next_link"><a>{{ctrl.page}}</a></li>
+                <li ng-show="ctrl.next_link"><a href="" ng-click="ctrl.goToNext()">&gt;</a></li>
               </ul>
           </div>
           <div class="overlay" ng-show="ctrl.loading">
