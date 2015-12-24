@@ -375,3 +375,10 @@ class Transfusion(Model):
             return cls.query(ndb.OR(*filters))
 
         return cls.query()
+
+    def delete(self):
+        tags = self.tags
+        self.key.delete()
+        for tag in tags + ['all']:
+            self._cache.decr(self._get_cache_key(tag))
+            self.count(tag)

@@ -31,20 +31,20 @@ from datetime import datetime
 import logging
 
 from flask import request
-from flask.helpers import make_response, url_for
+from flask.helpers import make_response
 from flask.json import jsonify
 from google.appengine.api.datastore_errors import BadValueError
 from google.appengine.ext import ndb
 from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
+from mejcrt.controllers.decorators import require_admin
 from mejcrt.controllers.patient import parse_fields, \
-    make_response_list_paginator
+    make_response_list_paginator, generic_delete
 from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs
 from mejcrt.util import onlynumbers
 
 from ..app import app
 from ..models import Transfusion, Patient, BloodBag, LogEntry
-from ..util import iconv
 from .decorators import require_login
 
 
@@ -202,6 +202,11 @@ def create_or_update():
         return make_response(jsonify(code="Bad Request"), 400, {})
 
     return make_response(jsonify(code="OK", data=dict(key=key.urlsafe())), 200, {})
+
+@app.route("/api/v1/transfusion/<key>", methods=["DELETE"], endpoint="transfusion.delete")
+@require_admin()
+def delete(key):
+    return generic_delete(key, Transfusion)
 
 @app.route("/api/v1/transfusion/locals", methods=["GET"], endpoint="transfusion.locals")
 @require_login()

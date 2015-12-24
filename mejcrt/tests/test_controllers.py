@@ -301,6 +301,20 @@ class TestTransfusion(TestBase):
         data = rv.json['data']
         self.assertEquals(c, data['stats']['all'])
 
+    def testDeleteNotAdmin(self):
+        self.login()
+        from ..models import Transfusion
+        o = Transfusion.query().get()
+        rv = self.client.delete(url_for('transfusion.delete', key=o.key.urlsafe()))
+        self.assert403(rv)
+
+    def testDeleteAdmin(self):
+        self.login(is_admin=True)
+        from ..models import Transfusion
+        o = Transfusion.query().get()
+        rv = self.client.delete(url_for('transfusion.delete', key=o.key.urlsafe()))
+        self.assert200(rv)
+
     def testCreate(self):
         self.login()
         rv = self.client.post(url_for('transfusion.upinsert'), data=json.dumps(self.data),
@@ -452,8 +466,8 @@ class TestTransfusion(TestBase):
         rv = self.client.get(url_for('transfusion.get', key=123))
         self.assert401(rv)
 
-    def testHistoryCreateGetUpdateGet(self):
-        self.login()
+    def testHistoryCreateGetUpdateGetDeleteGet(self):
+        self.login(is_admin=True)
         data = self.data
 
         # create
@@ -499,6 +513,15 @@ class TestTransfusion(TestBase):
         data_without_patient = data.copy()
         del data_without_patient['patient']
         self.assertDictEqual(got_data, data_without_patient)
+
+        key = got_data['key']
+        # delete
+        rv = self.client.delete(url_for('transfusion.delete', key=key))
+        self.assert200(rv)
+
+        # get not found
+        rv = self.client.get(url_for('transfusion.get', key=key))
+        self.assert404(rv)
 
     def testUpdateNotFound(self):
         self.login()
