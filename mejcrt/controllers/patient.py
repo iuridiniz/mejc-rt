@@ -42,6 +42,19 @@ from ..app import app
 from ..models import Patient, LogEntry
 from .decorators import require_login
 
+def str2bool(f):
+    if f == '1':
+        return True
+    if f == '0':
+        return False
+    return None
+
+def bool2int(f):
+    if f == True:
+        return 1
+    if f == False:
+        return 0
+    return None
 
 def parse_fields(f):
     "transform to lowercase, remove any spaces and split on ','"

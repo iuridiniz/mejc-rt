@@ -39,7 +39,7 @@ from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
 from mejcrt.controllers.decorators import require_admin
 from mejcrt.controllers.patient import parse_fields, \
-    make_response_list_paginator, generic_delete
+    make_response_list_paginator, generic_delete, str2bool, bool2int
 from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs
 from mejcrt.util import onlynumbers
 
@@ -82,7 +82,7 @@ def _get_multi():
     max_ = int(request.args.get("max", '20'))
     offset = int(request.args.get('offset', '0'))
     q = request.args.get('q', '') or None
-    exact = True if request.args.get('exact', '') == '1' else False
+    exact = str2bool(request.args.get('exact', None)) or False
 
     fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'code'))])
     if offset < 0:
@@ -115,7 +115,7 @@ def _get_multi():
                                         offset=offset,
                                         q=q,
                                         fields=','.join(fields.keys()),
-                                        exact=1 if exact else 0,
+                                        exact=bool2int(exact),
                                         dbquery=query,
                                         total=total,
                                         endpoint=endpoint)
