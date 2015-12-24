@@ -47,6 +47,21 @@ def parse_fields(f):
     "transform to lowercase, remove any spaces and split on ','"
     return (''.join(f.lower().split())).split(',')
 
+def generic_delete(key, class_):
+    try:
+        key = ndb.Key(urlsafe=key)
+    except TypeError as e:
+        logging.error("Error while decoding key %r: %r" % (key, e))
+        return make_response(jsonify(code="Not Found"), 404, {})
+
+    o = key.get()
+    logging.info(o)
+    if o and isinstance(o, class_):
+        o.delete()
+        return make_response(jsonify(data={}, code='OK'), 200, {})
+    return make_response(jsonify(code="Not Found"), 404, {})
+
+
 def make_response_list_paginator(max_, offset, dbquery, total, endpoint, **extra):
     if offset < 0:
         offset = 0
@@ -181,19 +196,7 @@ def get(key=None):
 @app.route("/api/v1/patient/<key>", methods=["DELETE"], endpoint="patient.delete")
 @require_admin()
 def delete(key):
-    try:
-        key = ndb.Key(urlsafe=key)
-    except TypeError as e:
-        logging.error("Error while decoding key %r: %r" % (key, e))
-        return make_response(jsonify(code="Not Found"), 404, {})
-
-    p = key.get()
-    logging.info(p)
-    if p and isinstance(p, Patient):
-        p.delete()
-        return make_response(jsonify(data={}, code='OK'), 200, {})
-
-    return make_response(jsonify(code="Not Found"), 404, {})
+    return generic_delete(key, Patient)
 
 @app.route("/api/v1/patient/code/<code>", methods=["GET"], endpoint="patient.get_by_code")
 @require_login()
