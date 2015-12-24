@@ -252,12 +252,12 @@ class Patient(Model):
     @classmethod
     def build_query(cls, name=None, code=None, exact=False):
         filters = []
-        if not name is None:
+        if name is not None:
             if exact:
                 filters.append(cls.name == iconv(name).strip().lower())
             else:
                 filters.append(cls.name_tags == iconv(name).strip().lower())
-        if not code is None:
+        if code is not None:
             if exact:
                 filters.append(cls.code == code)
             else:
@@ -368,7 +368,7 @@ class Transfusion(Model):
             filters.append(cls.patient.IN(keys))
         if patient_key:
             filters.append(cls.patient == patient_key)
-        if not code is None:
+        if code is not None:
             filters.append(cls.code == code)
 
         if filters:
