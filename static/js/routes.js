@@ -38,6 +38,13 @@
             controller : "PatientEditController as ctrl"
         });
     });
+    /* Transfusion pages */
+    app.config(function($routeProvider) {
+        $routeProvider.when("/transfusion", {
+            templateUrl : "templates/transfusion/list.html",
+            controller : "TransfusionListController as ctrl"
+        });
+    });
     /* OTHERS PAGES */
     app.config(function($routeProvider) {
         $routeProvider.when("/blank", {
