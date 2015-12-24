@@ -1,5 +1,5 @@
 (function() {
-    app.controller("TransfusionListController", ['$http', '$location', '$scope', '$httpParamSerializer', '$timeout', function($http, $location, $scope, $httpParamSerializer, $timeout) {
+    app.controller("TransfusionListController", ['$http', '$location', '$scope', '$httpParamSerializer', '$timeout',  function($http, $location, $scope, $httpParamSerializer, $timeout) {
         var ctrl = this;
         if ($scope.main.need_login == true) {
             $location.path("/login").search({});
@@ -16,6 +16,11 @@
         ctrl.max = 10;
         ctrl.total = 0;
         ctrl.count = 0;
+        ctrl.filter_tags = {
+           "rt": false,
+           "semrt": false,
+           "naovisitado": false
+        };
 
         ctrl.prev_link = null;
         ctrl.next_link = null;
@@ -57,11 +62,19 @@
             }
         };
         ctrl.buildUrl = function() {
+            var tags = [];
+            angular.forEach(ctrl.filter_tags, function(v, k) {
+                if (v == true) {
+                    tags.push(k);
+                }
+            });
+
             var query = {
                     offset: ctrl.offset,
                     max: ctrl.max,
                     q: ctrl.filter,
                     fields: ctrl.fields,
+                    tags : tags.join(","),
             };
             return  "/api/v1/transfusion?" + $httpParamSerializer(query)
         };

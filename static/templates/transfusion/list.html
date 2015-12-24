@@ -31,16 +31,46 @@
                 </div>
               </div>
             </div>
-          </div>
+            <div>
+              <br/>
+              <div class="btn-group btn-group-justified" data-toggle="buttons">
+                <label class="btn btn-default"
+                  ng-click="ctrl.filter_tags.naovisitado = ! ctrl.filter_tags.naovisitado; ctrl.searchClick()">
+                  <input type="checkbox" ng-checked="!ctrl.filter_tags.visitado">
+                  <span class="fa-stack"> 
+                    <i class="fa fa-question fa-stack-1x text-success"></i>
+                  </span>
+                  <span class="hidden-xs"> Não visitado </span>
+                </label>
+                <label class="btn btn-default"
+                  ng-click="ctrl.filter_tags.rt = ! ctrl.filter_tags.rt; ctrl.searchClick()">
+                  <input type="checkbox" ng-checked="ctrl.filter_tags.rt">
+                  <span class="fa-stack text-danger">
+                    <i class="fa ion-waterdrop fa-stack-1x"></i> 
+                    <i class="fa fa-ban fa-stack-2x" style="opacity: 0.8;"> </i>
+                  </span>
+                  <span class="hidden-xs"> Com reação </span>
+                </label>
+                <label class="btn btn-default"
+                  ng-click="ctrl.filter_tags.semrt = ! ctrl.filter_tags.semrt; ctrl.searchClick()">
+                  <input type="checkbox" ng-checked="!ctrl.filter_tags.semrt">
+                  <span class="fa-stack"> 
+                    <i class="fa fa-heart-o fa-stack-1x text-danger"></i>
+                  </span>
+                  <span class="hidden-xs"> Sem reação </span>
+                </label>
+              </div>
+            </div>
+          </div> <!-- ".box-header" -->
           <!-- /.box-header -->
           <div class="box-body no-padding">
-            <table class="table table-condensed table-striped">
+            <table class="table table-condensed">
               <thead>
                 <tr>
                   <th>#</th>
                   <th>Data</th>
                   <th class="hidden-xs">Código</th>
-                  <th>Prontuário</th>
+                  <th class="hidden-xs">Prontuário</th>
                   <th>Paciente</th>
                   <th class="hidden-xs">Etiquetas</th>
                   <th>Ações</th>
@@ -52,7 +82,7 @@
                    <td> {{ $index+1+ctrl.offset }} </td>
                   <td>{{ tr.date | brDate}}</td>
                   <td class="hidden-xs">{{ tr.code }}</td>
-                  <td>{{ tr.patient.code }}</td>
+                  <td class="hidden-xs">{{ tr.patient.code }}</td>
                   <td>{{ tr.patient.name | cut:true:25 }}</td>
                   <td class="hidden-xs">
                     <span
@@ -85,6 +115,11 @@
                   </td>
                   <td>
                     <div class="btn-group">
+                      <button type="button"
+                        class="btn btn-primary btn-xs">
+                        <i class="fa fa-tag"></i> <span class="hidden-xs">
+                          Etiquetar</span>
+                      </button>
                       <button ng-click="ctrl.action(tr)" type="button"
                         class="btn btn-info btn-xs">
                         <i class="fa fa-pencil"></i> <span class="hidden-xs">
@@ -104,13 +139,27 @@
           <!-- /.box-body -->
           <div class="box-footer clearfix">
               <span class="pull-left" ng-hide="ctrl.loading">
-                <span ng-hide="ctrl.applied_filter">
-                    Total de transfusões: {{ctrl.total}}
-                </span>
                 <span ng-show="ctrl.applied_filter">
-                    Transfusões com filtro
-                    <strong>{{ctrl.applied_filter}}</strong>:
-                    {{ctrl.count}}
+                    Filtro <strong>{{ctrl.applied_filter}}</strong>
+                </span>
+                <span ng-show="ctrl.filter_tags.rt" title="Paciente visitado e com reação transfusional">
+                    <span class="fa-stack text-danger">
+                        <i class="fa ion-waterdrop fa-stack-1x"></i> 
+                        <i class="fa fa-ban fa-stack-2x" style="opacity: 0.8;"> </i>
+                    </span>
+                </span>
+                <span ng-show="ctrl.filter_tags.semrt" title="Paciente visitado e sem reação transfusional">
+                  <span class="fa-stack"> 
+                    <i class="fa fa-heart-o fa-stack-1x text-danger"></i>
+                  </span>
+                </span>
+                <span ng-show="ctrl.filter_tags.naovisitado " title="Paciente não visitado">
+                  <span class="fa-stack"> 
+                    <i class="fa fa-question fa-stack-1x text-success"></i>
+                  </span>
+                </span>
+                <span>
+                   {{ctrl.count}} transfusões (total de {{ctrl.total}}).
                 </span>
               </span>
               <ul class="pagination pagination-sm no-margin pull-right">
