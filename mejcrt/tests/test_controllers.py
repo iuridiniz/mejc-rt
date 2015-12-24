@@ -154,7 +154,7 @@ class TestPatient(TestBase):
         self.login()
         from ..models import Patient
         n = Patient.query().count()
-        keys = [];
+        codes = [];
         url = url_for('patient.get', **{'offset': 0, 'max': 2})
         for _ in range(n):
             rv = self.client.get(url)
@@ -163,10 +163,10 @@ class TestPatient(TestBase):
             self.assertLessEqual(len(data), 2)
             url = rv.json['next']
             for o in data:
-                keys.append(o['key'])
+                codes.append(o['code'])
 
-        expected_keys = [k.urlsafe() for k in Patient.query().fetch(keys_only=True)]
-        self.assertEquals(keys, expected_keys)
+        expected_codes = [p.code for p in Patient.query().fetch()]
+        self.assertEquals(codes, expected_codes)
 
     def _interatePaginatorPrev(self, start, max_, count):
         codes = [];
@@ -206,7 +206,6 @@ class TestPatient(TestBase):
         p = Patient.query().get()
         rv = self.client.delete(url_for('patient.delete', key=p.key.urlsafe()))
         self.assert200(rv)
-
 
     def testStats(self):
         self.login()
@@ -346,64 +345,112 @@ class TestTransfusion(TestBase):
         self.assertEquals(len(got_data), 1)
         self.assertEquals(key.urlsafe(), got_data[0]['key'])
 
-    def testGetList10(self):
+    def testGetListQueryFieldCode(self):
+        from ..models import Transfusion
         self.login()
-        query = dict(max=10)
+        tr = Transfusion.query().get()
+
+        query = dict({'q': tr.code, 'fields': 'code'})
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals(len(data), 1)
+        self.assertEquals(tr.key.urlsafe(), data[0]['key'])
+
+    def testGetListQueryFieldPatientName(self):
+        from .. import models
+        self.login()
+        p = models.Patient.query().get()
+
+        query = dict(q=p.name, fields='patient.name')
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals([k.urlsafe() for k in p.transfusions], [tr['key'] for tr in data])
+
+    def testGetListQueryFieldPatientCode(self):
+        from .. import models
+        self.login()
+        p = models.Patient.query().get()
+
+        query = dict(q=p.code, fields='patient.code')
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals([k.urlsafe() for k in p.transfusions], [tr['key'] for tr in data])
+
+    def testGetListQueryFieldPatientKey(self):
+        from .. import models
+        self.login()
+        p = models.Patient.query().get()
+
+        query = dict(q=p.key.urlsafe(), fields='patient.key')
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals([k.urlsafe() for k in p.transfusions], [tr['key'] for tr in data])
+
+    def testGetListQueryFieldPatientKeyInvalid(self):
+        self.login()
+        query = dict(q='a', fields='patient.key')
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals(len(data), 0)
+
+    def testGetListMax(self):
+        self.login()
+        from ..models import Transfusion
+        n = Transfusion.query().count()
+        query = dict({'max': n / 2})
         rv = self.client.get(url_for('transfusion.get', **query))
         self.assert200(rv)
         data = rv.json['data']
-        self.assertLessEqual(len(data), query['max'])
+        self.assertEquals(len(data), query['max'])
+
+    def testGetListOffset(self):
+        self.login()
+        from ..models import Transfusion
+        n = Transfusion.query().count()
+        # last two
+        query = dict({'offset': n - 2})
+        rv = self.client.get(url_for('transfusion.get', **query))
+        self.assert200(rv)
+        data = rv.json['data']
+        self.assertEquals(len(data), 2)
+
+    def testGetListPaginatorNext(self):
+        self.login()
+        from ..models import Transfusion
+        # n = Transfusion.query().count()
+        keys = [];
+        url = url_for('transfusion.get', **{'offset': 0, 'max': 2})
+        for _ in range(5):
+            print url
+            rv = self.client.get(url)
+            self.assert200(rv)
+            data = rv.json['data']
+            self.assertLessEqual(len(data), 2)
+            url = rv.json['next']
+            for o in data:
+                keys.append(o['key'])
+
+        expected_keys = [k.urlsafe() for k in Transfusion.query().fetch(keys_only=True, limit=10)]
+        self.assertEquals(keys, expected_keys)
 
     def testGetNotLogged(self):
         rv = self.client.get(url_for('transfusion.get', key=123))
         self.assert401(rv)
-
-    def testSearchPatientCode(self):
-        from .. import models
-        self.login()
-        tr = models.Transfusion.query().get()
-
-        query = dict(patient_code=tr.patient.get().code)
-        rv = self.client.get(url_for('transfusion.search', **query))
-        self.assert200(rv)
-        self.assertIsNotNone(rv.json)
-        data = rv.json['data']
-        self.assertIn(tr.key.urlsafe(), data['keys'])
-
-    def testSearchPatientName(self):
-        from .. import models
-        self.login()
-        tr = models.Transfusion.query().get()
-
-        query = dict(patient_name=tr.patient.get().name)
-        rv = self.client.get(url_for('transfusion.search', **query))
-        self.assert200(rv)
-        self.assertIsNotNone(rv.json)
-        data = rv.json['data']
-        self.assertIn(tr.key.urlsafe(), data['keys'])
-
-    def testSearchCode(self):
-        from .. import models
-        self.login()
-        tr = models.Transfusion.query().get()
-
-        query = dict(code=tr.code)
-        rv = self.client.get(url_for('transfusion.search', **query))
-        self.assert200(rv)
-        self.assertIsNotNone(rv.json)
-        data = rv.json['data']
-        self.assertIn(tr.key.urlsafe(), data['keys'])
-
-    def testSearchNotLogged(self):
-        rv = self.client.get(url_for('transfusion.search', q=123))
-        self.assert401(rv)
-
-    def testSearchNone(self):
-        self.login()
-        rv = self.client.get(url_for('transfusion.search', q=123))
-        self.assert200(rv)
-        data = rv.json['data']
-        self.assertEquals(data['keys'], [])
 
     def testHistoryCreateGetUpdateGet(self):
         self.login()

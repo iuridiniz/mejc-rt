@@ -62,36 +62,6 @@ def stats():
     return make_response(
          jsonify(code="OK", data=dict(stats=stats)), 200, {})
 
-@app.route("/api/v1/transfusion/search", methods=['GET'], endpoint="transfusion.search")
-@require_login()
-def search():
-    if not hasattr(request, 'args'):
-        return make_response(jsonify(code="Bad Request"), 400, {})
-    query_patient_code = request.args.get('patient_code')
-    query_patient_name = request.args.get('patient_name')
-    query_code = request.args.get('code')
-
-    query = None
-
-    if query_patient_code:
-        keys = Patient.query().filter(Patient.code_tags == query_patient_code).fetch(keys_only=True)
-        query = Transfusion.query().filter(Transfusion.patient.IN(keys))
-    elif query_code:
-        query = Transfusion.query().filter(Transfusion.code == query_code)
-    elif query_patient_name:
-        query_patient_name = iconv(query_patient_name).lower()
-        keys = Patient.query().filter(Patient.name_tags == query_patient_name).fetch(keys_only=True)
-        query = Transfusion.query().filter(Transfusion.patient.IN(keys))
-
-    keys = []
-    if query:
-        for i, key in enumerate(query.iter(keys_only=True)):
-            if i == 20:
-                break
-            keys.append(key.urlsafe())
-
-    return make_response(jsonify(data=dict(keys=keys), code='OK'), 200, {})
-
 @app.route("/api/v1/transfusion", methods=["GET"],
            endpoint="transfusion.get")
 @app.route("/api/v1/transfusion/<key>", methods=["GET"],
@@ -112,7 +82,9 @@ def _get_multi():
     max_ = int(request.args.get("max", '20'))
     offset = int(request.args.get('offset', '0'))
     q = request.args.get('q', '') or None
-    fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'name'))])
+    exact = True if request.args.get('exact', '') == '1' else False
+
+    fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'code'))])
     if offset < 0:
         offset = 0
 
@@ -124,12 +96,26 @@ def _get_multi():
     total = Transfusion.count()
     endpoint = "transfusion.get"
 
-    # query = Transfusion.build_query(exact='true', name=fields.get('name'), code=fields.get('code'))
-    query = Transfusion.query()
+    patient_key_urlsafe = fields.get('patient.key', '') or None
+    patient_key = None
+    if patient_key_urlsafe:
+        try:
+            patient_key = ndb.Key(urlsafe=patient_key_urlsafe)
+        except (ProtocolBufferDecodeError, TypeError):
+            logging.error("Cannot get patient from key %r" % (patient_key_urlsafe))
+            # return make_response(jsonify(code="Bad request"), 400, {})
+            patient_key = ndb.Key(Patient, "NonExists")
+
+    query = Transfusion.build_query(exact=exact,
+                                    patient_code=fields.get('patient.code'),
+                                    patient_name=fields.get('patient.name'),
+                                    patient_key=patient_key,
+                                    code=fields.get('code'))
     return make_response_list_paginator(max_=max_,
                                         offset=offset,
                                         q=q,
                                         fields=','.join(fields.keys()),
+                                        exact=1 if exact else 0,
                                         dbquery=query,
                                         total=total,
                                         endpoint=endpoint)

@@ -245,13 +245,23 @@ class Patient(Model):
         result = cls.get_by_id(*args, **kwargs)
         return result
 
+    @property
+    def transfusions(self):
+        return Transfusion.build_query(patient_key=self.key).fetch(keys_only=True)
+
     @classmethod
-    def build_query(cls, name=None, code=None):
+    def build_query(cls, name=None, code=None, exact=False):
         filters = []
         if not name is None:
-            filters.append(cls.name_tags == iconv(name).strip().lower())
+            if exact:
+                filters.append(cls.name == iconv(name).strip().lower())
+            else:
+                filters.append(cls.name_tags == iconv(name).strip().lower())
         if not code is None:
-            filters.append(cls.code_tags == code)
+            if exact:
+                filters.append(cls.code == code)
+            else:
+                filters.append(cls.code_tags == code)
 
         if filters:
             return cls.query(ndb.OR(*filters))
@@ -350,3 +360,18 @@ class Transfusion(Model):
             self._cache.decr(self._get_cache_key(tag))
             self.count(tag)
 
+    @classmethod
+    def build_query(cls, exact=False, code=None, patient_code=None, patient_name=None, patient_key=None):
+        filters = []
+        if patient_code is not None or patient_name is not None:
+            keys = Patient.build_query(name=patient_name, code=patient_code, exact=exact).fetch(keys_only=True)
+            filters.append(cls.patient.IN(keys))
+        if patient_key:
+            filters.append(cls.patient == patient_key)
+        if not code is None:
+            filters.append(cls.code == code)
+
+        if filters:
+            return cls.query(ndb.OR(*filters))
+
+        return cls.query()
