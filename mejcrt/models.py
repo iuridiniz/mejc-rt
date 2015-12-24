@@ -378,6 +378,8 @@ class Transfusion(Model):
         filters = []
         if patient_code is not None or patient_name is not None:
             keys = Patient.build_query(name=patient_name, code=patient_code, exact=exact).fetch(keys_only=True)
+            if len(keys) == 0:
+                keys = [ndb.Key(Patient, "NonExists")]
             filters.append(cls.patient.IN(keys))
         if patient_key:
             filters.append(cls.patient == patient_key)

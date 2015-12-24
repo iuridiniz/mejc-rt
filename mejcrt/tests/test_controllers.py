@@ -377,6 +377,16 @@ class TestTransfusion(TestBase):
         data = rv.json['data']
         self.assertEquals([k.urlsafe() for k in p.transfusions], [tr['key'] for tr in data])
 
+    def testGetListQueryFieldPatientNameDoesNotExist(self):
+        self.login()
+        query = dict(fields='patient.name,code,patient.code', max='10', offset=0, q='NonExistentKKKK')
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals(len(data), 0)
+
     def testGetListQueryFieldPatientCode(self):
         from .. import models
         self.login()
