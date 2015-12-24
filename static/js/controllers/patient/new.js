@@ -28,17 +28,18 @@
             if(form.$invalid) {
                 return;
             }
-            $http.get("/api/v1/patient/code/" + ctrl.data.code).then(function(success) {
-                /* duplicated code */
-                $scope.main.showError("Prontuário '" + ctrl.data.code +"' duplicado", "Erro");
-            }, function(err) {
-                if (err.status == 404) {
-                    $http.post("/api/v1/patient", ctrl.data).then(function(response) {
+            var query = {'exact':true, 'q': patient.code, 'fields': 'code'}
+            $http.get("/api/v1/patient?" + $httpParamSerializer(query)).then(function(response) {
+                var patients = response.data.data;
+                if (patients.length == 0) {
+                    return $http.post("/api/v1/patient", ctrl.data).then(function(response) {
                         $scope.main.showSuccess("Paciente '" + ctrl.data.name + "' cadastrado", "Sucesso");
                         $location.path("/patient");
                     });
-                    return;
-                } 
+                }
+                /* patient.code is duplicated */
+                $scope.main.showError("Prontuário '" + ctrl.data.code +"' duplicado", "Erro");
+            }, function(err) {
                 $scope.main.showError("Paciente não pode ser cadastrado. contate o administrador", "Erro");
             });
         };

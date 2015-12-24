@@ -43,9 +43,9 @@ from ..models import Patient, LogEntry
 from .decorators import require_login
 
 def str2bool(f):
-    if f == '1':
+    if f == '1' or f == 'true':
         return True
-    if f == '0':
+    if f == '0' or f == 'false':
         return False
     return None
 
@@ -184,15 +184,17 @@ def _get_multi():
     max_ = int(request.args.get("max", '20'))
     offset = int(request.args.get('offset', '0'))
     q = request.args.get('q', '') or None
+    exact = str2bool(request.args.get('exact', None)) or False
     fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'name'))])
 
     total = Patient.count()
-    query = Patient.build_query(name=fields.get('name'), code=fields.get('code'))
+    query = Patient.build_query(exact=exact, name=fields.get('name'), code=fields.get('code'))
     endpoint = "patient.get"
 
     return make_response_list_paginator(max_=max_,
                                         offset=offset,
                                         q=q,
+                                        exact=bool2int(exact),
                                         fields=','.join(fields.keys()),
                                         dbquery=query,
                                         total=total,
@@ -211,15 +213,6 @@ def get(key=None):
 @require_admin()
 def delete(key):
     return generic_delete(key, Patient)
-
-@app.route("/api/v1/patient/code/<code>", methods=["GET"], endpoint="patient.get_by_code")
-@require_login()
-def get_by_code(code):
-    p = Patient.get_by_code(code)
-    if p is None:
-        return make_response(jsonify(code="Not Found"), 404, {})
-
-    return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
 
 @app.route("/api/v1/patient/types",
            methods=["GET"],

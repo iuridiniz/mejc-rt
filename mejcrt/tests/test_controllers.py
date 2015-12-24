@@ -92,15 +92,6 @@ class TestPatient(TestBase):
                               content_type='application/json')
         self.assert400(rv)
 
-    def testGetCode(self):
-        self.login()
-        from ..models import Patient
-        p = Patient.query().get()
-        rv = self.client.get(url_for('patient.get_by_code', code=p.code))
-        self.assert200(rv)
-        data = rv.json['data']
-        self.assertEquals(p.key.urlsafe(), data['key'])
-
     def testGetKey(self):
         self.login()
         from ..models import Patient
@@ -115,12 +106,12 @@ class TestPatient(TestBase):
         rv = self.client.get(url_for('patient.get', key='a'))
         self.assert404(rv)
 
-    def testGetListQuery(self):
+    def testGetListQueryCode(self):
         from ..models import Patient
         self.login()
         p = Patient.query().get()
 
-        query = dict({'q': p.code, 'fields': 'code'})
+        query = {'exact':True, 'q': p.code, 'fields': 'code'}
         rv = self.client.get(url_for('patient.get', **query))
 
         self.assert200(rv)
