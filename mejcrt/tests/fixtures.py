@@ -67,7 +67,8 @@ def fixture_random():
             bag.content = random.choice(models.blood_contents)
             tr.bags.append(bag)
         if random.choice((True, False)):
-            tr.tags = ['visitado']
+            tr.tags = ['naovisitado']
+        else:
             if random.choice((True, False)):
                 tr.tags.append('rt')
             else:

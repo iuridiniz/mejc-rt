@@ -68,14 +68,19 @@
                             <i class="fa fa-ban fa-stack-2x" style="opacity: 0.8;"> </i>
                         </span>
                     </span>
-                    <span ng-show="tr.tags.indexOf('semrt') >= 0" class="fa-stack"
+                    <span ng-show="tr.tags.indexOf('semrt') >= 0"
                       data-toggle="tooltip" data-placement="left"
-                      title="Paciente visitado e sem reação transfusional"> <i
-                        class="fa fa-heart-o fa-stack-1x text-danger"></i>
-                    </span> <span ng-show="tr.tags.indexOf('visitado') < 0"
-                      class="fa-stack" data-toggle="tooltip" data-placement="left"
-                      title="Paciente não visitado"> <i
-                        class="fa fa-question fa-stack-1x text-success"></i>
+                      title="Paciente visitado e sem reação transfusional">
+                      <span class="fa-stack"> 
+                        <i class="fa fa-heart-o fa-stack-1x text-danger"></i>
+                      </span>
+                    </span> 
+                    <span ng-show="tr.tags.indexOf('naovisitado') >= 0"
+                      data-toggle="tooltip" data-placement="left"
+                      title="Paciente não visitado">
+                      <span class="fa-stack"> 
+                        <i class="fa fa-question fa-stack-1x text-success"></i>
+                      </span>
                     </span>
                   </td>
                   <td>

@@ -61,11 +61,11 @@ valid_locals = ("Unidade A (Anexo)",
                 'Sem registro')
 transfusion_tags = ('semrt',
                     'rt',
-                    'ficha-preenchida',
-                    'carimbo-plantao',
-                    'carimbo-nhh',
+                    'fichapreenchida',
+                    'carimboplantao',
+                    'carimbonhh',
                     'anvisa',
-                    'visitado')
+                    'naovisitado')
 
 valid_actions = ["create", 'update']
 
