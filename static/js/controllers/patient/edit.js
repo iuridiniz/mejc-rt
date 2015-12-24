@@ -47,9 +47,9 @@
         promisses['patient'] = $http.get("/api/v1/patient/" + ctrl.patient_key).then(
         function(response) {
             //console.log(response);
-            patient_data = response.data.data;
+            patient_data = response.data.data[0];
             patient_data.code = parseInt(patient_data.code); 
-            ctrl.patient_data = response.data.data;
+            ctrl.patient_data = patient_data;
            
         }, function(err) {
            if (err.status == 404) {

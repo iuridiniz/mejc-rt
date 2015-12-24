@@ -39,7 +39,8 @@ from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
 from mejcrt.controllers.decorators import require_admin
 from mejcrt.controllers.patient import parse_fields, \
-    make_response_list_paginator, generic_delete, str2bool, bool2int
+    make_response_list_paginator, generic_delete, str2bool, bool2int, \
+    generic_get
 from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs
 from mejcrt.util import onlynumbers
 
@@ -70,12 +71,8 @@ def stats():
 def get(key=None):
     if key is None:
         return _get_multi()
-    key = ndb.Key(urlsafe=key)
-    tr = key.get()
-    if tr is None or not isinstance(tr, Transfusion):
-        return make_response(jsonify(code="Not Found"), 404, {})
 
-    return make_response(jsonify(data=[tr.to_dict()], code='OK'), 200, {})
+    return generic_get(key, Transfusion)
 
 def _get_multi():
     # get_multi

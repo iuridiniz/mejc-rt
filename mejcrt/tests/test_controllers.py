@@ -108,7 +108,7 @@ class TestPatient(TestBase):
         rv = self.client.get(url_for('patient.get', key=key))
         self.assert200(rv)
         data = rv.json['data']
-        self.assertEquals(key, data['key'])
+        self.assertEquals(key, data[0]['key'])
 
     def testGetKeyInvalid(self):
         self.login()
@@ -230,7 +230,7 @@ class TestPatient(TestBase):
 
         # get
         rv = self.client.get(url_for('patient.get', key=key))
-        got_data = rv.json['data']
+        got_data = rv.json['data'][0]
         self.assert200(rv)
         data['key'] = key
         self.assertEquals(len(got_data['logs']), 1)
@@ -249,7 +249,7 @@ class TestPatient(TestBase):
 
         # get
         rv = self.client.get(url_for('patient.get', key=key))
-        got_data = rv.json['data']
+        got_data = rv.json['data'][0]
         self.assert200(rv)
         data['key'] = key
         self.assertEquals(len(got_data['logs']), 2)

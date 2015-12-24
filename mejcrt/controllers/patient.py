@@ -74,6 +74,17 @@ def generic_delete(key, class_):
         return make_response(jsonify(data={}, code='OK'), 200, {})
     return make_response(jsonify(code="Not Found"), 404, {})
 
+def generic_get(key, class_):
+    try:
+        key = ndb.Key(urlsafe=key)
+    except TypeError as e:
+        logging.error("Error while decoding key %r: %r" % (key, e))
+        return make_response(jsonify(code="Not Found"), 404, {})
+
+    o = key.get()
+    if o and isinstance(o, class_):
+        return make_response(jsonify(data=[o.to_dict()], code='OK'), 200, {})
+    return make_response(jsonify(code="Not Found"), 404, {})
 
 def make_response_list_paginator(max_, offset, dbquery, total, endpoint, **extra):
     if offset < 0:
@@ -194,17 +205,7 @@ def get(key=None):
     if key is None:
         return _get_multi()
 
-    try:
-        key = ndb.Key(urlsafe=key)
-    except TypeError as e:
-        logging.error("Error while decoding key %r: %r" % (key, e))
-        return make_response(jsonify(code="Not Found"), 404, {})
-
-    p = key.get()
-    if p is None:
-        return make_response(jsonify(code="Not Found"), 404, {})
-
-    return make_response(jsonify(data=p.to_dict(), code='OK'), 200, {})
+    return generic_get(key, Patient)
 
 @app.route("/api/v1/patient/<key>", methods=["DELETE"], endpoint="patient.delete")
 @require_admin()
