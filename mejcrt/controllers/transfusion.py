@@ -41,7 +41,8 @@ from mejcrt.controllers.decorators import require_admin
 from mejcrt.controllers.patient import parse_fields, \
     make_response_list_paginator, generic_delete, str2bool, bool2int, \
     generic_get
-from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs
+from mejcrt.models import valid_locals, blood_types, blood_contents, UserPrefs, \
+    transfusion_tags
 from mejcrt.util import onlynumbers
 
 from ..app import app
@@ -82,6 +83,13 @@ def _get_multi():
     exact = str2bool(request.args.get('exact', None)) or False
 
     fields = dict([(f, q) for f in parse_fields(request.args.get('fields', 'code'))])
+    tags = request.args.get('tags', None)
+    if tags:
+        tags = parse_fields(tags)
+        valid_tags = filter(lambda x: x in transfusion_tags, tags)
+    else:
+        valid_tags = None
+
     if offset < 0:
         offset = 0
 
@@ -95,25 +103,32 @@ def _get_multi():
 
     patient_key_urlsafe = fields.get('patient.key', '') or None
     patient_key = None
+    patient_key_non_exists = ndb.Key(Patient, "NonExists")
     if patient_key_urlsafe:
         try:
             patient_key = ndb.Key(urlsafe=patient_key_urlsafe)
         except (ProtocolBufferDecodeError, TypeError):
             logging.error("Cannot get patient from key %r" % (patient_key_urlsafe))
             # return make_response(jsonify(code="Bad request"), 400, {})
-            patient_key = ndb.Key(Patient, "NonExists")
+            patient_key = patient_key_non_exists
 
-    query = Transfusion.build_query(exact=exact,
-                                    patient_code=fields.get('patient.code'),
-                                    patient_name=fields.get('patient.name'),
-                                    patient_key=patient_key,
-                                    code=fields.get('code'))
+    if tags is not None and len(tags) == 1 and len(tags) != len(valid_tags):
+        # one tag was passed and it is a invalid tag
+        query = Transfusion.build_query(patient_key=patient_key_non_exists)
+    else:
+        query = Transfusion.build_query(exact=exact,
+                                        patient_code=fields.get('patient.code'),
+                                        patient_name=fields.get('patient.name'),
+                                        patient_key=patient_key,
+                                        tags=valid_tags,
+                                        code=fields.get('code'))
     return make_response_list_paginator(max_=max_,
                                         offset=offset,
                                         q=q,
                                         fields=','.join(fields.keys()),
                                         exact=bool2int(exact),
                                         dbquery=query,
+                                        tags=','.join(tags) if tags else None,
                                         total=total,
                                         endpoint=endpoint)
 

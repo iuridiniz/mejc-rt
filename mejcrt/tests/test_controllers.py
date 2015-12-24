@@ -364,6 +364,27 @@ class TestTransfusion(TestBase):
         self.assertEquals(len(data), 1)
         self.assertEquals(tr.key.urlsafe(), data[0]['key'])
 
+    def testGetListQueryTags(self):
+        self.login()
+        query = dict({'tags': 'rt', 'max': 100})
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        for i, tr in enumerate(data):
+            self.assertIn('rt', tr['tags'], "'rt' was not found in data[%d]['tags'] = %r" % (i, tr['tags']))
+
+    def testGetListQueryInvalidTag(self):
+        self.login()
+        query = dict({'tags': 'novalidtag', 'max': 100})
+        rv = self.client.get(url_for('transfusion.get', **query))
+
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json)
+        data = rv.json['data']
+        self.assertEquals(len(data), 0)
+
     def testGetListQueryFieldPatientName(self):
         from .. import models
         self.login()

@@ -301,7 +301,7 @@ class Transfusion(Model):
     bags = ndb.LocalStructuredProperty(BloodBag, repeated=True)
 
     tags = ndb.StringProperty(repeated=True, indexed=True,
-        choices=transfusion_tags)
+        choices=transfusion_tags,)
     text = ndb.TextProperty(required=False)
     logs = ndb.StructuredProperty(LogEntry, repeated=True)
 
@@ -374,8 +374,9 @@ class Transfusion(Model):
             self.count(tag)
 
     @classmethod
-    def build_query(cls, exact=False, code=None, patient_code=None, patient_name=None, patient_key=None):
+    def build_query(cls, exact=False, code=None, patient_code=None, patient_name=None, patient_key=None, tags=None):
         filters = []
+
         if patient_code is not None or patient_name is not None:
             keys = Patient.build_query(name=patient_name, code=patient_code, exact=exact).fetch(keys_only=True)
             if len(keys) == 0:
@@ -386,10 +387,14 @@ class Transfusion(Model):
         if code is not None:
             filters.append(cls.code == code)
 
-        if filters:
-            return cls.query(ndb.OR(*filters))
+        query = cls.query()
+        if tags:
+            query = query.filter(cls.tags.IN(tags))
 
-        return cls.query()
+        if filters:
+            query = query.filter(ndb.OR(*filters))
+
+        return query
 
     def delete(self):
         tags = self.tags
