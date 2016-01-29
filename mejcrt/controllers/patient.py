@@ -61,28 +61,23 @@ def parse_fields(f):
     "transform to lowercase, remove any spaces and split on ','"
     return (''.join(f.lower().split())).split(',')
 
-def generic_delete(key, class_):
+def _get_object(key):
     try:
         key = ndb.Key(urlsafe=key)
-    except TypeError as e:
+    except (TypeError, ProtocolBufferDecodeError) as e:
         logging.error("Error while decoding key %r: %r" % (key, e))
-        return make_response(jsonify(code="Not Found"), 404, {})
+        return None
+    return key.get()
 
-    o = key.get()
-    logging.info(o)
+def generic_delete(key, class_):
+    o = _get_object(key)
     if o and isinstance(o, class_):
         o.delete()
         return make_response(jsonify(data={}, code='OK'), 200, {})
     return make_response(jsonify(code="Not Found"), 404, {})
 
 def generic_get(key, class_):
-    try:
-        key = ndb.Key(urlsafe=key)
-    except (TypeError, ProtocolBufferDecodeError) as e:
-        logging.error("Error while decoding key %r: %r" % (key, e))
-        return make_response(jsonify(code="Not Found"), 404, {})
-
-    o = key.get()
+    o = _get_object(key)
     if o and isinstance(o, class_):
         return make_response(jsonify(data=[o.to_dict()], code='OK'), 200, {})
     return make_response(jsonify(code="Not Found"), 404, {})
