@@ -604,18 +604,20 @@ class TestUser(TestBase):
         data = rv.json['data']
         self.assertEquals(len(data), n)
 
-#     def testLoginGoogle(self):
-#         self.fixtureCreateSomeData()
-#         rv = self.client.get(url_for('user.login.google', **{'continue': 'http://localhost:8080/'}))
-#         self.assert200(rv)
-#         self.assertIsNotNone(rv.json.get('url'))
-#
-#     def testLogoutGoogle(self):
-#         self.fixtureCreateSomeData()
-#
-#         rv = self.client.get(url_for('user.logout.google', **{'continue': 'http://localhost:8080/'}))
-#         self.assert200(rv)
-#         self.assertIsNotNone(rv.json.get('url'))
+    @unittest.skip("Does not work on testbed")
+    def testLoginGoogle(self):
+        self.fixtureCreateSomeData()
+        rv = self.client.get(url_for('user.login.google', **{'continue': 'http://localhost:8080/'}))
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json.get('url'))
+
+    @unittest.skip("Does not work on testbed")
+    def testLogoutGoogle(self):
+        self.fixtureCreateSomeData()
+
+        rv = self.client.get(url_for('user.logout.google', **{'continue': 'http://localhost:8080/'}))
+        self.assert200(rv)
+        self.assertIsNotNone(rv.json.get('url'))
 
     def testUpdateUserNotLoggedAsAdmin(self):
         self.fixtureCreateSomeData()
