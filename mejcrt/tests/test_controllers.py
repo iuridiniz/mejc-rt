@@ -124,6 +124,13 @@ class TestPatient(TestBase):
         rv = self.client.get(url_for('patient.get', key='a'))
         self.assert404(rv)
 
+    def testGetKeyInvalid2(self):
+        self.login()
+        rv = self.client.get(url_for('patient.get',
+                                     key='agpkZXZ-bWVqY3J0chILEgdQYXRpZW50IgUyNDQwMA'))
+
+        self.assert404(rv)
+
     def testGetListQueryCode(self):
         from ..models import Patient
         self.login()

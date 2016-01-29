@@ -78,7 +78,7 @@ def generic_delete(key, class_):
 def generic_get(key, class_):
     try:
         key = ndb.Key(urlsafe=key)
-    except TypeError as e:
+    except (TypeError, ProtocolBufferDecodeError) as e:
         logging.error("Error while decoding key %r: %r" % (key, e))
         return make_response(jsonify(code="Not Found"), 404, {})
 
