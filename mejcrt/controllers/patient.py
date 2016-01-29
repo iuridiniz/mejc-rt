@@ -37,6 +37,7 @@ from google.net.proto.ProtocolBuffer import ProtocolBufferDecodeError
 
 from mejcrt.controllers.decorators import require_admin
 from mejcrt.models import UserPrefs, patient_types
+from mejcrt.util import onlynumbers
 
 from ..app import app
 from ..models import Patient, LogEntry
@@ -147,7 +148,7 @@ def create_or_update():
         return make_response(jsonify(code="Bad Request"), 400, {})
 
     patient_key = request.json.get('key', None)
-    code = request.json.get('code', None)
+    code = onlynumbers(request.json.get('code', 0))
     patient = None
     is_new = False
     if patient_key and request.method == "PUT":
@@ -157,9 +158,9 @@ def create_or_update():
             code = patient.code
         except ProtocolBufferDecodeError:
             pass
-    elif patient_key is None and request.method == "POST":
+    elif patient_key is None and request.method == "POST" and int(code) > 0:
         is_new = True
-        patient = Patient(id=str(code))
+        patient = Patient(id=code)
     else:
         logging.error("Invalid request %r for json %r" % (request.method, request.json))
         return make_response(jsonify(code="Bad Request"), 400, {})

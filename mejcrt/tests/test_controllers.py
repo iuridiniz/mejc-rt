@@ -7,6 +7,7 @@ from flask_testing.utils import TestCase
 from google.appengine.datastore import datastore_stub_util
 from google.appengine.ext import testbed, ndb
 
+from mejcrt.util import onlynumbers
 from .fixtures import fixture_random
 
 class TestBase(TestCase):
@@ -79,6 +80,23 @@ class TestPatient(TestBase):
 
         from ..models import Patient
         p = Patient.get_by_code(self.patient_data['code'])
+        self.assertIsInstance(p, Patient)
+
+    def testCreateInvalidCode(self):
+        self.login()
+        data = self.patient_data.copy()
+        data.update(code='12345.00')
+        data.update(name='John')
+        # import ipdb;ipdb.set_trace()
+        rv = self.client.post(url_for('patient.upinsert'),
+                              data=json.dumps(data),
+                              content_type='application/json')
+        self.assert200(rv)
+
+        from ..models import Patient
+        p = Patient.get_by_code(data['code'])
+        self.assertIsNone(p)
+        p = Patient.get_by_code(onlynumbers(data['code']))
         self.assertIsInstance(p, Patient)
 
     def testDuplicated(self):
