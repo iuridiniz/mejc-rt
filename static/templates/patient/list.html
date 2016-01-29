@@ -51,18 +51,19 @@
                 <tr ng-repeat="p in ctrl.patients" data-key="{{p.key}}">
                     <td> {{ $index+1+ctrl.offset }} </td>
                     <td> {{ p.code }} </td>
-                    <td> {{ p.name | cut:true:30}} </td>
+                    <td class="visible-xs"> {{ p.name | cut:true:20}} </td>
+                    <td class="hidden-xs"> {{ p.name | cut:true:50}} </td>
                     <td class="hidden-xs"> {{ p.type }} </td>
                     <td class="hidden-xs"> {{ p.blood_type }} </td>
                     <td>
                       <button ng-click="ctrl.edit(p.key)" type="button"
-                        class="btn btn-info btn-xs">
+                        class="btn btn-info">
                         <i class="fa fa-pencil"></i> <span class="hidden-xs">
                           Modificar </span>
                       </button>
                       <button ng-show="main.user.admin"
                         ng-click="ctrl.deleteConfirm(p)" type="button"
-                        class="btn btn-danger btn-xs">
+                        class="btn btn-danger">
                         <i class="fa fa-trash"></i> <span class="hidden-xs">
                           Apagar </span>
                       </button>

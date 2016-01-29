@@ -83,7 +83,8 @@
                   <td>{{ tr.date | brDate}}</td>
                   <td class="hidden-xs">{{ tr.code }}</td>
                   <td class="hidden-xs">{{ tr.patient.code }}</td>
-                  <td>{{ tr.patient.name | cut:true:25 }}</td>
+                  <td class="visible-xs">{{ tr.patient.name | cut:true:20 }}</td>
+                  <td class="hidden-xs">{{ tr.patient.name | cut:true:50 }}</td>
                   <td class="hidden-xs">
                     <span
                       ng-show="tr.tags.indexOf('rt') >= 0"
@@ -116,17 +117,17 @@
                   <td>
                     <div class="btn-group">
                       <button type="button"
-                        class="btn btn-primary btn-xs">
+                        class="btn btn-primary">
                         <i class="fa fa-tag"></i> <span class="hidden-xs">
                           Etiquetar</span>
                       </button>
                       <button ng-click="ctrl.action(tr)" type="button"
-                        class="btn btn-info btn-xs">
+                        class="btn btn-info">
                         <i class="fa fa-pencil"></i> <span class="hidden-xs">
                           Modificar </span>
                       </button>
                       <button ng-show="main.user.admin" ng-click="ctrl.action(tr)" type="button"
-                        class="btn btn-danger btn-xs">
+                        class="btn btn-danger">
                         <i class="fa fa-trash"></i> <span class="hidden-xs">
                           Apagar </span>
                       </button>
