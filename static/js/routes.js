@@ -45,6 +45,24 @@
             controller : "TransfusionListController as ctrl"
         });
     });
+    app.config(function($routeProvider) {
+        $routeProvider.when("/transfusion/new", {
+            templateUrl : "templates/transfusion/new.html",
+            controller : "TransfusionNewController as ctrl"
+        });
+    });
+    app.config(function($routeProvider) {
+        $routeProvider.when("/transfusion/:key/edit", {
+            templateUrl : "templates/transfusion/edit.html",
+            controller : "TransfusionEditController as ctrl"
+        });
+    });
+    app.config(function($routeProvider) {
+        $routeProvider.when("/patient/:key/transfusion/new", {
+            templateUrl : "templates/transfusion/new.html",
+            controller : "TransfusionNewController as ctrl"
+        });
+    });
     /* OTHERS PAGES */
     app.config(function($routeProvider) {
         $routeProvider.when("/blank", {
