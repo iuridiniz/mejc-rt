@@ -11,7 +11,7 @@
                        '</div>'
         };
     });
-    
+
     app.directive("patientModal", function() {
         return {
             restrict: 'E',

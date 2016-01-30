@@ -96,7 +96,7 @@
         };
         
         ctrl.action = function() {
-            console.log(arguments);
+            //console.log(arguments);
         }
         ctrl.requestTransfusions(ctrl.buildUrl());
     }]);

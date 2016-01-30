@@ -38,6 +38,7 @@
             controller : "PatientEditController as ctrl"
         });
     });
+
     /* Transfusion pages */
     app.config(function($routeProvider) {
         $routeProvider.when("/transfusion", {

@@ -8,7 +8,9 @@ from google.appengine.datastore import datastore_stub_util
 from google.appengine.ext import testbed, ndb
 
 from mejcrt.util import onlynumbers
+
 from .fixtures import fixture_random
+
 
 class TestBase(TestCase):
     def setUp(self):
