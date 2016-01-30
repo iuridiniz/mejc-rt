@@ -1,0 +1,47 @@
+<div>
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>
+      Transfusões <small> Nova transfusão</small>
+    </h1>
+    <ol class="breadcrumb">
+      <li><a href="#/">MEJC<small>RT</small></a></li>
+      <li> <a href="#/transfusion"> <i class="fa ion-waterdrop"></i> Transfusões</a></li>
+      <li class="active"><i class="fa ion-android-add-circle"></i> Nova </li>
+    </ol>
+  </section>
+
+  <!-- Main content -->
+  <section class="content">
+    <message-box></message-box>
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="box box-info">
+          <div class="box-header with-border">
+            <h3 class="box-title">Nova transfusão <span ng-show="ctrl.transfusion.patient">para <strong>{{ ctrl.transfusion.patient.name}}</strong></span></h3>
+          </div><!-- /.box-header -->
+          <!-- form start -->
+          <div class="box-body">
+            <div>
+              <transfusion-form
+                  transfusion="ctrl.transfusion"
+                  query="ctrl.query"
+                  blood-types="ctrl.blood_types"
+                  blood-contents="ctrl.blood_contents"
+                  locals="ctrl.locals"
+                  on-submit="ctrl.create(transfusion, form)"
+                  on-ready="ctrl.transfusionFormReady(form)"
+                  submit-text="Salvar"
+                  on-reset="ctrl.reset(form)"></transfusion-form>
+            </div>
+          </div> <!-- /.box-body -->
+          <div class="overlay" ng-show="ctrl.loading">
+            <i class="fa fa-refresh fa-spin"></i>
+          </div>
+        </div>
+        <!-- /.box -->
+      </div>
+    </div>
+  </section>
+  <!-- /.content -->
+</div>

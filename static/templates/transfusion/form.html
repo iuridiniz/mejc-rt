@@ -1,0 +1,133 @@
+<form name="form" class="form-horizontal">
+  <input type="hidden" name="key" ng-modal="transfusion.key"/>
+  <div class="form-group has-feedback" ng-hide="transfusion.patient">
+    <label for="name" class="col-sm-2 control-label">Paciente</label>
+    <div class="col-sm-10">
+      <input ng-model="query" type="text"
+        class="form-control" id="query"
+        placeholder="Localizar" data-provide="typeahead" autocomplete="off"
+        ng-change="query=translit(query)">
+      <span
+        class="glyphicon glyphicon-user form-control-feedback"></span>
+    </div>
+  </div>
+  <div ng-show="transfusion.patient">
+    <div class="form-group has-feedback">
+      <label for="name" class="col-sm-2 control-label">Paciente</label>
+      <div class="col-sm-10">
+        <input ng-model="transfusion.patient.name" type="text"
+          class="form-control" name="name"
+          placeholder="" required disabled>
+        <span
+          class="glyphicon glyphicon-user form-control-feedback"></span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="code" class="col-sm-2 control-label">Prontuário</label>
+      <div class="col-sm-10">
+        <input ng-model="transfusion.patient.code" type="text"
+          class="form-control" name="patient_code" placeholder="" min="1"
+          required disabled>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="blood_type" class="col-sm-2 control-label">Tipo
+        sanguíneo</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="blood_type"
+          ng-model="transfusion.patient.blood_type" required disabled/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="type" class="col-sm-2 control-label">Tipo</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="patient_type"
+          ng-model="transfusion.patient.type" required disabled/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="code" class="col-sm-2 control-label">Código NHH</label>
+      <div class="col-sm-10">
+        <input ng-model="transfusion.code" type="number"
+          class="form-control" name="code" placeholder="22013" min="1"
+          required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="local" class="col-sm-2 control-label">Local</label>
+      <div class="col-sm-10">
+        <select
+            class="form-control"
+            name="local"
+            ng-options="option for option in locals"
+            ng-model="transfusion.local"
+            required>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="local" class="col-sm-2 control-label">Data</label>
+      <div class="col-sm-10">
+        <input type="date"
+            class="form-control"
+            name="date"
+            ng-model="transfusion.date"
+            required/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-2 control-label">
+        Bolsas
+      </label>
+      <div class="col-md-10">
+        <div class="row">
+          <span class="col-md-12 col-xs-12">
+            <table ng-show="transfusion.bags.length" class="table table-bordered table-condensed" style="margin-bottom: 0px;">
+                <thead>
+                    <tr>
+                      <th style="width: 50%">Componente</th>
+                      <th style="width: 50%">Tipo Sanguíneo</th>
+                      <th style="width: 36px">Apagar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="bag in transfusion.bags track by $index">
+                      <td style="vertical-align: inherit; padding-top: 0px; padding-bottom: 0px;">
+                        <select style="height: inherit; font-size: smaller;"
+                          class="form-control"
+                          name="liw"
+                          ng-options="option for option in blood_contents"
+                          ng-model="bag.content"
+                          required/>
+                      </td>
+                      <td style="vertical-align: inherit; padding-top: 0px; padding-bottom: 0px;">
+                        <select style="height: inherit; font-size: smaller;"
+                          name="low"
+                          class="form-control"
+                          ng-model="bag.type"
+                          ng-options="option for option in blood_types"
+                          required/>
+                      </td>
+                      <td style="vertical-align: inherit; padding-top: 0px; padding-bottom: 0px;">
+                        <a ng-click="removeBag($index)"class="btn btn-lg bg-orange" ><i class="fa fa-trash"></i></a>
+                      </td>
+                    </tr>
+                </tbody>
+            </table>
+          </span>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <a ng-click="addBag()" class="btn btn-default btn-block btn-lg text-green" style="background: ghostwhite; /*font-size: 22pt;*/">
+                <span class="glyphicon glyphicon-plus"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <button ng-disabled="!transfusion.bags.length || !transfusion.patient.key || form.$pristine || form.$invalid" type="submit" class="btn btn-success pull-right" ng-click="submit({transfusion:transfusion, form:form})">{{submit_text}}</button>
+    <button ng-hide="{{reset === undefined}}" type="button" class="btn btn-default pull-left" ng-click="reset({form:form})">Limpar</button></span>
+  </div>
+</form>
