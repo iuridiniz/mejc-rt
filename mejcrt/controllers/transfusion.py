@@ -49,6 +49,14 @@ from ..app import app
 from ..models import Transfusion, Patient, BloodBag, LogEntry
 from .decorators import require_login
 
+def parse_date(text):
+    valid_formats = ('%Y-%m-%d', "%Y-%m-%dT%H:%M:%S.%fZ")
+    for fmt in valid_formats:
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            pass
+    raise ValueError("time data %r does not match format %r" % (text, valid_formats),)
 
 @app.route("/api/v1/transfusion/stats", methods=['GET'], endpoint="transfusion.stats")
 @require_login()
@@ -202,14 +210,14 @@ def create_or_update():
     logs.append(LogEntry.from_user(UserPrefs.get_current(), is_new))
     try:
         tr.populate(patient=patient_key,
-                    date=datetime.strptime(transfusion_date, "%Y-%m-%d"),
+                    date=parse_date(transfusion_date),
                     local=transfusion_local,
                     bags=bags,
                     logs=logs,
                     tags=tags,
                     text=text)
         key = tr.put(update=not is_new)
-    except BadValueError as e:
+    except (BadValueError, ValueError) as e:
         logging.error("Cannot create TR from %r: %r" % (request.json, e))
         return make_response(jsonify(code="Bad Request"), 400, {})
 

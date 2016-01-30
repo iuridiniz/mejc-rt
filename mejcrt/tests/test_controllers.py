@@ -337,6 +337,15 @@ class TestTransfusion(TestBase):
                           content_type='application/json')
         self.assert200(rv)
 
+    def testCreateInvalidDate(self):
+        self.login()
+        data = self.data.copy()
+        data.update(date="16-01-30T03:43:26.494Z")
+        rv = self.client.post(url_for('transfusion.upinsert'),
+                              data=json.dumps(data),
+                              content_type='application/json')
+        self.assert400(rv)
+
     def testDuplicated(self):
         self.login()
         rv = self.client.post(url_for('transfusion.upinsert'),
