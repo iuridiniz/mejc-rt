@@ -1,5 +1,5 @@
 (function() {
-    app.controller("MainController", ['$http', '$location', '$httpParamSerializer', function($http, $location, $httpParamSerializer) {
+    app.controller("MainController", ['$http', '$location', '$httpParamSerializer', '$rootScope', 'angularLoad', function($http, $location, $httpParamSerializer, $rootScope, angularLoad) {
         var main = this;
         main.user = null;
         main.need_login = false;
@@ -52,7 +52,7 @@
         .then(function(response) {
           main.google_logout_url = response.data['continue'];
         });
-        
+
         //main.showInfo("Conteudo", "Titulo");
         //main.showInfo("Conteudo");
         //main.showError("Conteudo", "Titulo");
@@ -61,5 +61,23 @@
         //main.showWarning("Conteudo");
         //main.showSuccess("Conteudo", "Titulo");
         //main.showSuccess("Conteudo");
+
+        $rootScope.$on('$stateChangeSuccess',
+        function(event, toState, toParams, fromState, fromParams){
+            console.log('$stateChangeSuccess', arguments);
+        });
+
+        $rootScope.$on('$viewContentLoaded', function(event){
+            /*console.log('$viewContentLoaded', arguments);*/
+
+            angularLoad.loadScript('bower_components/AdminLTE/dist/js/app.js?' + Math.random()).then(function() {
+                // Script loaded succesfully.
+                // We can now start using the functions
+                console.log('loaded');
+            }).catch(function() { /* ECMA 6 */
+                // There was some error loading the script. Meh
+            });
+        });
+
     }]);
 })();
