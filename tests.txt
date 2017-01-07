@@ -1,0 +1,1 @@
+PYTHONPATH=lib/:$HOME/.local/opt/google_appengine nosetests --verbose --rednose --with-coverage --cover-package=mejcrt mejcrt/tests
